@@ -196,9 +196,6 @@ export const gamepadAxes = {
 	cameraY: 0.0
 };
 
-/** TODO: Make this configurable */
-const gamepadAxisMappings = ['marbleX', 'marbleY', 'cameraX', 'cameraY'];
-const gamepadButtonMappings = ['jump', 'use', 'blast', '', '', 'blast', 'jump', 'use', 'restart', 'pause', '', '', 'up', 'down', 'left', 'right', '', ''];
 
 /** The most recent controller a button was pressed on, used to select the controller to poll */
 let mostRecentGamepad = 0;
@@ -228,13 +225,13 @@ const updateGamepadInput = () => {
 	for (let i = 0; i < gamepads[mostRecentGamepad].buttons.length && i < 18; i++) {
 		let state = (gamepads[mostRecentGamepad].buttons[i].value > 0.5);
 		let presser = 'gamepadButton' + i;
-		let buttonName = gamepadButtonMappings[i];
+		let buttonName = StorageManager.data?.settings.gamepadButtonMapping[i] || "";
 		if (buttonName !== '')
 			setPressed(buttonName as keyof typeof StorageManager.data.settings.gameButtonMapping, presser, state);
 	}
 
 	for (let i = 0; i < gamepads[mostRecentGamepad].axes.length && i < 4; i++) {
-		let axisName = gamepadAxisMappings[i];
+		let axisName = StorageManager.data?.settings.gamepadAxisMapping[i] || "";
 		if (axisName !== '') {
 			gamepadAxes[axisName as keyof typeof gamepadAxes] = gamepads[mostRecentGamepad].axes[i];
 			// Dead zone
