@@ -15,6 +15,8 @@ export interface StorageData {
 		shadows: boolean,
 		musicVolume: number,
 		soundVolume: number,
+		gamepadButtonMapping: string[],
+		gamepadAxisMapping: string[],
 		gameButtonMapping: {
 			"up": string,
 			"down": string,
@@ -95,6 +97,8 @@ const DEFAULT_STORAGE_DATA: StorageData = {
 		shadows: false,
 		musicVolume: 0.5,
 		soundVolume: 0.7,
+		gamepadButtonMapping: ["jump", "use", "blast", "", "", "blast", "jump", "use", "restart", "pause", "", "", "up", "down", "left", "right", "", ""],
+		gamepadAxisMapping: ["marbleX", "marbleY", "cameraX", "cameraY"],
 		gameButtonMapping: {
 			"up": "KeyW", // kekw
 			"down": "KeyS",
