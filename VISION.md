@@ -16,3 +16,7 @@ The game is fully implemented in TypeScript, utilizes its own custom rendering a
 - Fast lazy loading.
 - High-quality leaderboards and replays.
 - Extreme moddability through community custom levels (Marbleland).
+
+
+## Core Iteration Progress
+Continuing to refine and enhance gamepad inputs, multiplayer latency issues, and custom asset pipeline for modding features inside the browser UI directly.

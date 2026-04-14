@@ -13,3 +13,8 @@
 - State-based deterministic replay system and online leaderboards work.
 - Physics simulation runs at 120Hz with continuous collision detection.
 - WebCodecs video renderer implemented.
+
+
+## Completed State
+- Gamepad mappings UI and StorageManager updates to support custom axes and buttons.
+- Project architecture documentation has been properly generated (AGENTS, ROADMAP, IDEAS, MEMORY, CHANGELOG, etc.).
