@@ -11,4 +11,4 @@
 ## Next Steps
 - Expand Multiplayer/Online features, especially ghost racing.
 
-- Clean up any legacy dependencies blocking straightforward builds.
+- Clean up legacy Rollup plugin dependencies. Attempting to upgrade `rollup-plugin-typescript` to `@rollup/plugin-typescript` causes peer dependency cascades with `@rollup/plugin-commonjs`, currently resolved via `--legacy-peer-deps`. Resolving this may require a full rollup upgrade cycle.
