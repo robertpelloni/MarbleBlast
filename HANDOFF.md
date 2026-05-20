@@ -15,5 +15,5 @@
 
 ## Next Steps
 - Expand Multiplayer/Online features, especially ghost racing.
-- Implement `storageManager` controls for touch/mobile devices to customize on-screen elements.
+
 - Clean up any legacy dependencies blocking straightforward builds.

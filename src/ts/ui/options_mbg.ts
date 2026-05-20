@@ -247,7 +247,6 @@ export class MbgOptionsScreen extends OptionsScreen {
 		menu.setupButton(this.cameraTab, '', () => this.selectControlsTab('camera'));
 		menu.setupButton(this.mouseTab, '', () => this.selectControlsTab('mouse'));
 		menu.setupButton(this.gamepadTab, '', () => this.selectControlsTab('gamepad'));
-		menu.setupButton(this.gamepadTab, '', () => this.selectControlsTab('gamepad'));
 
 		menu.setupButton(this.buttonMarbleLeft, 'options/cntr_mrb_lft', () => this.changeKeybinding('left'));
 		menu.setupButton(this.buttonMarbleRight, 'options/cntr_mrb_rt', () => this.changeKeybinding('right'));
