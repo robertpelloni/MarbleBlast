@@ -10,3 +10,5 @@ todo.txt
 .rpt2_cache
 .vscode
 **/*.DS_STORE
+# Jules AI session logs (auto-generated, not needed in repo)
+.jules/sessions/
