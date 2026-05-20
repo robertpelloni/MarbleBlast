@@ -15,8 +15,10 @@ export class MbpOptionsScreen extends OptionsScreen {
 	applyButton = document.querySelector('#mbp-options-apply') as HTMLImageElement;
 	generalButton = document.querySelector('#mbp-options-general') as HTMLImageElement;
 	hotkeysButton = document.querySelector('#mbp-options-hotkeys') as HTMLImageElement;
+	gamepadButton = document.querySelector('#mbp-options-gamepad') as HTMLImageElement;
 	generalContainer = document.querySelector('#mbp-options-general-container') as HTMLDivElement;
 	hotkeysContainer = document.querySelector('#mbp-options-hotkeys-container') as HTMLDivElement;
+	gamepadContainer = document.querySelector('#mbp-options-gamepad-container') as HTMLDivElement;
 
 	/** Array of functions that cause each option element to be refreshed. */
 	updateFuncs: (() => void)[] = [];
@@ -45,22 +47,41 @@ export class MbpOptionsScreen extends OptionsScreen {
 		this.menu.setupButton(this.generalButton, 'options/general', () => {
 			this.generalContainer.classList.remove('hidden');
 			this.hotkeysContainer.classList.add('hidden');
+			this.gamepadContainer.classList.add('hidden');
 
 			// Lock the one button in place
 			this.generalButton.src = this.generalButton.src.slice(0, -5) + 'd.png';
 			this.generalButton.setAttribute('data-locked', '');
 			this.hotkeysButton.src = this.hotkeysButton.src.slice(0, -5) + 'n.png';
 			this.hotkeysButton.removeAttribute('data-locked');
+			this.gamepadButton.src = this.gamepadButton.src.slice(0, -5) + 'n.png';
+			this.gamepadButton.removeAttribute('data-locked');
 		}, undefined, undefined, false);
 		this.menu.setupButton(this.hotkeysButton, 'options/hotkeys', () => {
 			this.generalContainer.classList.add('hidden');
 			this.hotkeysContainer.classList.remove('hidden');
+			this.gamepadContainer.classList.add('hidden');
 
 			// Lock the one button in place
 			this.hotkeysButton.src = this.hotkeysButton.src.slice(0, -5) + 'd.png';
 			this.hotkeysButton.setAttribute('data-locked', '');
 			this.generalButton.src = this.generalButton.src.slice(0, -5) + 'n.png';
 			this.generalButton.removeAttribute('data-locked');
+			this.gamepadButton.src = this.gamepadButton.src.slice(0, -5) + 'n.png';
+			this.gamepadButton.removeAttribute('data-locked');
+		}, undefined, undefined, false);
+		this.menu.setupButton(this.gamepadButton, 'options/hotkeys', () => {
+			this.generalContainer.classList.add('hidden');
+			this.hotkeysContainer.classList.add('hidden');
+			this.gamepadContainer.classList.remove('hidden');
+
+			// Lock the one button in place
+			this.gamepadButton.src = this.gamepadButton.src.slice(0, -5) + 'd.png';
+			this.gamepadButton.setAttribute('data-locked', '');
+			this.generalButton.src = this.generalButton.src.slice(0, -5) + 'n.png';
+			this.generalButton.removeAttribute('data-locked');
+			this.hotkeysButton.src = this.hotkeysButton.src.slice(0, -5) + 'n.png';
+			this.hotkeysButton.removeAttribute('data-locked');
 		}, undefined, undefined, false);
 		this.generalButton.click();
 
@@ -176,6 +197,19 @@ export class MbpOptionsScreen extends OptionsScreen {
 		this.addHotkey(this.hotkeysContainer, 'freeLook');
 		this.addHotkey(this.hotkeysContainer, 'restart');
 		this.addHotkey(this.hotkeysContainer, 'blast');
+
+		/* Gamepad */
+		this.addHotkey(this.gamepadContainer, 'up', true);
+		this.addHotkey(this.gamepadContainer, 'left', true);
+		this.addHotkey(this.gamepadContainer, 'down', true);
+		this.addHotkey(this.gamepadContainer, 'right', true);
+		this.addHotkey(this.gamepadContainer, 'cameraUp', true);
+		this.addHotkey(this.gamepadContainer, 'cameraLeft', true);
+		this.addHotkey(this.gamepadContainer, 'cameraDown', true);
+		this.addHotkey(this.gamepadContainer, 'cameraRight', true);
+		this.addHotkey(this.gamepadContainer, 'jump', true);
+		this.addHotkey(this.gamepadContainer, 'use', true);
+		this.addHotkey(this.gamepadContainer, 'blast', true);
 
 		// Preload dropdown images
 		await ResourceManager.loadImages(['small', 'medium', 'large', 'xlarge'].map(x => './assets/ui_mbp/options/dropdown-' + x + '.png'));
@@ -324,7 +358,7 @@ export class MbpOptionsScreen extends OptionsScreen {
 	}
 
 	/** Adds a hotkey rebind element for a given key. */
-	addHotkey(container: HTMLDivElement, key: keyof StorageData['settings']['gameButtonMapping']) {
+	addHotkey(container: HTMLDivElement, key: keyof StorageData['settings']['gameButtonMapping'], isGamepad = false) {
 		let element = document.createElement('div');
 		element.classList.add('mbp-options-element', '_hotkey');
 
@@ -334,7 +368,7 @@ export class MbpOptionsScreen extends OptionsScreen {
 
 		let button = document.createElement('img');
 		this.menu.setupButton(button, 'options/bind', () => {
-			this.changeKeybinding(key);
+			this.changeKeybinding(key, isGamepad);
 		});
 
 		let bindingLabel = document.createElement('p');
@@ -342,7 +376,7 @@ export class MbpOptionsScreen extends OptionsScreen {
 		element.append(p, button, bindingLabel);
 		container.appendChild(element);
 
-		this.updateFuncs.push(() => bindingLabel.textContent = this.formatKeybinding(key));
+		this.updateFuncs.push(() => bindingLabel.textContent = isGamepad ? this.formatGamepadKeybindingForButton(key) : this.formatKeybinding(key));
 	}
 
 	/** Adds a configurable button element. */

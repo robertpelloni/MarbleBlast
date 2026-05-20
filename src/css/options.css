@@ -610,3 +610,17 @@
 	font-size: 11px;
 	pointer-events: none;
 }
+#tab-gamepad {
+	display: block;
+	position: absolute;
+	top: 92px;
+	left: 298px;
+	width: 120px;
+	height: 40px;
+}
+
+#controls-gamepad {
+	position: absolute;
+	top: 0;
+	left: 0;
+}

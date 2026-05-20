@@ -5,7 +5,7 @@ import { StorageManager } from "../storage";
 import { Util } from "../util";
 import { Menu } from "./menu";
 import { SCALING_RATIO } from "./misc";
-import { OptionsScreen } from "./options";
+import { OptionsScreen, buttonToDisplayNameMbg } from "./options";
 
 export class MbgOptionsScreen extends OptionsScreen {
 	tabGraphics: HTMLImageElement;
@@ -49,9 +49,12 @@ export class MbgOptionsScreen extends OptionsScreen {
 	marbleTab: HTMLImageElement; // it's not
 	cameraTab: HTMLImageElement;
 	mouseTab: HTMLImageElement;
+	gamepadTab: HTMLImageElement;
 	marbleControlsDiv: HTMLDivElement;
 	cameraControlsDiv: HTMLDivElement;
 	mouseControlsDiv: HTMLDivElement;
+	gamepadControlsDiv: HTMLDivElement;
+	gamepadOptionsContainer: HTMLDivElement;
 
 	buttonMarbleLeft: HTMLImageElement;
 	buttonMarbleRight:  HTMLImageElement;
@@ -136,9 +139,12 @@ export class MbgOptionsScreen extends OptionsScreen {
 		this.marbleTab = document.querySelector('#tab-marble') as HTMLImageElement; // it's not
 		this.cameraTab = document.querySelector('#tab-camera') as HTMLImageElement;
 		this.mouseTab = document.querySelector('#tab-mouse') as HTMLImageElement;
+		this.gamepadTab = document.querySelector('#tab-gamepad') as HTMLImageElement;
 		this.marbleControlsDiv = document.querySelector('#controls-marble') as HTMLDivElement;
 		this.cameraControlsDiv = document.querySelector('#controls-camera') as HTMLDivElement;
 		this.mouseControlsDiv = document.querySelector('#controls-mouse') as HTMLDivElement;
+		this.gamepadControlsDiv = document.querySelector('#controls-gamepad') as HTMLDivElement;
+		this.gamepadOptionsContainer = document.querySelector('#gamepad-options-container') as HTMLDivElement;
 
 		this.buttonMarbleLeft = document.querySelector('#button-marble-left') as HTMLImageElement;
 		this.buttonMarbleRight = document.querySelector('#button-marble-right') as HTMLImageElement;
@@ -240,6 +246,8 @@ export class MbgOptionsScreen extends OptionsScreen {
 		menu.setupButton(this.marbleTab, '', () => this.selectControlsTab('marble'));
 		menu.setupButton(this.cameraTab, '', () => this.selectControlsTab('camera'));
 		menu.setupButton(this.mouseTab, '', () => this.selectControlsTab('mouse'));
+		menu.setupButton(this.gamepadTab, '', () => this.selectControlsTab('gamepad'));
+		menu.setupButton(this.gamepadTab, '', () => this.selectControlsTab('gamepad'));
 
 		menu.setupButton(this.buttonMarbleLeft, 'options/cntr_mrb_lft', () => this.changeKeybinding('left'));
 		menu.setupButton(this.buttonMarbleRight, 'options/cntr_mrb_rt', () => this.changeKeybinding('right'));
@@ -332,7 +340,9 @@ export class MbgOptionsScreen extends OptionsScreen {
 		await this.updateAllElements();
 	}
 
+	updateFuncs: (() => void)[] = [];
 	async updateAllElements() {
+		this.generateGamepadHotkeys();
 		this.selectResolutionButton([this.resolution640, this.resolution800, this.resolution1024][StorageManager.data.settings.resolution], StorageManager.data.settings.resolution);
 		this.selectVideoDriverButton([this.openGl, this.direct3D][StorageManager.data.settings.videoDriver], StorageManager.data.settings.videoDriver);
 		this.selectScreenStyleButton([this.windowedButton, this.fullButton][StorageManager.data.settings.screenStyle], StorageManager.data.settings.videoDriver);
@@ -479,28 +489,73 @@ export class MbgOptionsScreen extends OptionsScreen {
 		}
 	}
 
-	selectControlsTab(which: 'marble' | 'camera' | 'mouse') {
-		for (let elem of [this.marbleControlsDiv, this.cameraControlsDiv, this.mouseControlsDiv]) {
+	selectControlsTab(which: 'marble' | 'camera' | 'mouse' | 'gamepad') {
+		for (let elem of [this.marbleControlsDiv, this.cameraControlsDiv, this.mouseControlsDiv, this.gamepadControlsDiv]) {
 			elem.classList.add('hidden');
 		}
 
-		let index = ['marble', 'camera', 'mouse'].indexOf(which);
-		let elem = [this.marbleControlsDiv, this.cameraControlsDiv, this.mouseControlsDiv][index];
+		let index = ['marble', 'camera', 'mouse', 'gamepad'].indexOf(which);
+		let elem = [this.marbleControlsDiv, this.cameraControlsDiv, this.mouseControlsDiv, this.gamepadControlsDiv][index];
 		elem.classList.remove('hidden');
 
-		this.controlsBackground.src = './assets/ui/options/' + ['cntrl_marb_bse.png', 'cntrl_cam_bse.png', 'cntrl_mous_base.png'][index];
-
-		if (which === 'mouse') {
-			// The mouse background is sized differently and requires its own transform
+		if (which === 'gamepad') {
+			this.controlsBackground.src = './assets/ui/options/cntrl_mous_base.png';
 			this.controlsBackground.style.left = '2px';
 			this.controlsBackground.style.top = '-1px';
 		} else {
-			this.controlsBackground.style.left = '';
-			this.controlsBackground.style.top = '';
+			this.controlsBackground.src = './assets/ui/options/' + ['cntrl_marb_bse.png', 'cntrl_cam_bse.png', 'cntrl_mous_base.png'][index];
+			if (which === 'mouse') {
+				this.controlsBackground.style.left = '2px';
+				this.controlsBackground.style.top = '-1px';
+			} else {
+				this.controlsBackground.style.left = '';
+				this.controlsBackground.style.top = '';
+			}
+		}
+	}
+
+	generateGamepadHotkeys() {
+		this.gamepadOptionsContainer.innerHTML = '';
+		let keys: (keyof typeof StorageManager.data.settings.gameButtonMapping)[] = [
+			'up', 'down', 'left', 'right', 'jump', 'use', 'blast',
+			'cameraUp', 'cameraDown', 'cameraLeft', 'cameraRight'
+		];
+
+		for (let key of keys) {
+			let div = document.createElement('div');
+			div.style.marginBottom = '8px';
+			div.style.display = 'flex';
+			div.style.justifyContent = 'space-between';
+			div.style.alignItems = 'center';
+
+			let p = document.createElement('span');
+			p.textContent = buttonToDisplayNameMbg[key] + ':';
+
+			let rightContainer = document.createElement('div');
+			rightContainer.style.display = 'flex';
+			rightContainer.style.alignItems = 'center';
+			rightContainer.style.gap = '10px';
+
+			let button = document.createElement('img');
+			this.menu.setupButton(button, 'options/bind', () => {
+				this.changeKeybinding(key, true);
+			});
+
+			let bindingLabel = document.createElement('span');
+			bindingLabel.style.width = '100px';
+			bindingLabel.style.textAlign = 'right';
+
+			this.updateFuncs.push(() => bindingLabel.textContent = this.formatGamepadKeybindingForButton(key));
+			bindingLabel.textContent = this.formatGamepadKeybindingForButton(key);
+
+			rightContainer.append(button, bindingLabel);
+			div.append(p, rightContainer);
+			this.gamepadOptionsContainer.appendChild(div);
 		}
 	}
 
 	refreshKeybindings() {
+		for (let func of this.updateFuncs) func();
 		this.buttonMarbleLeftContent.textContent = this.formatKeybinding('left');
 		this.buttonMarbleRightContent.textContent = this.formatKeybinding('right');
 		this.buttonMarbleUpContent.textContent = this.formatKeybinding('up');
