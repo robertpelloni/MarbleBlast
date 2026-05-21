@@ -354,3 +354,9 @@
 	top: 332px;
 	left: 400px;
 }
+#mbp-options-gamepad {
+	position: absolute;
+	display: block;
+	top: 20px;
+	left: 439px;
+}
