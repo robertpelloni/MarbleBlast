@@ -69,6 +69,26 @@ export class AudioManager {
 		this.assetPath = path;
 	}
 
+	/** Resolves the correct audio path, preferring .ogg if available, to support uncompressed native Ogg/Vorbis in older Torque files. */
+	resolveAudioPath(path: string) {
+		let lastSlash = path.lastIndexOf('/');
+		let fileName = lastSlash !== -1 ? path.slice(lastSlash + 1) : path;
+		let dirPath = lastSlash !== -1 ? path.slice(0, lastSlash + 1) : '';
+
+		let lastDot = fileName.lastIndexOf('.');
+		let baseFileName = lastDot !== -1 ? fileName.slice(0, lastDot) : fileName;
+
+		let searchPath = (dirPath.startsWith('sound/') ? '' : 'sound/') + dirPath + baseFileName;
+		let mission = state.level?.mission;
+		let availablePaths = mission ? mission.getFullNamesOf(searchPath) : ResourceManager.getFullNamesOf(searchPath);
+
+		let oggName = baseFileName + '.ogg';
+		if (availablePaths && availablePaths.includes(oggName)) {
+			return dirPath + oggName;
+		}
+		return path;
+	}
+
 	toFullPath(path: string) {
 		let fullPath = this.assetPath + path;
 		return fullPath;
@@ -76,6 +96,7 @@ export class AudioManager {
 
 	/** Loads an audio buffer from a path. Returns the cached version whenever possible. */
 	async loadBuffer(path: string) {
+		path = this.resolveAudioPath(path);
 		let fullPath = this.toFullPath(path);
 
 		// If there's a current level, see if there's a sound file for this path contained in it
@@ -140,6 +161,7 @@ export class AudioManager {
 	 */
 	createAudioSource(path: string | string[], destination = this.soundGain, position?: Vector3, preferStreaming = false) {
 		let chosenPath = (typeof path === "string")? path : Util.randomFromArray(path);
+		chosenPath = this.resolveAudioPath(chosenPath);
 		let fullPath = this.toFullPath(chosenPath);
 		let audioSource: AudioSource;
 

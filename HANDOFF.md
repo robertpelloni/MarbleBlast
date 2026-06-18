@@ -1,14 +1,11 @@
-# HANDOFF
+# Session Handoff
 
-## Current Status
-- Read and explored the codebase (`src/ts/ui` and `src/ts/input.ts`).
-- Created deep documentation for the repository: `AGENTS.md`, `VISION.md`, `ROADMAP.md`, `CHANGELOG.md`, `TODO.md`.
-- Found a short-term issue: gamepad axes and button mappings are currently hardcoded in `src/ts/input.ts` but the TODO says `TODO: Make this configurable`.
-- Implemented fully featured and configurable Gamepad Mappings within the Options UI for both MBG and MBP.
-- Updated `options.ts` to poll for Gamepad API buttons explicitly during rebinding state.
-- Bypassed resting analog trigger inputs (axis 6 & 7) from incorrectly overriding polling.
+## Summary of actions taken
+1. Implemented native `.ogg` fallback. `AudioManager` in `src/ts/audio.ts` now uses `resolveAudioPath(path)` to automatically resolve and prioritize `.ogg` extensions over requested `.wav` files when loading from either the `mission` zip or the `ResourceManager` caching structure. This solves the outstanding task to support native `Ogg/Vorbis` for uncompressed audio in older Torque files instead of relying purely on `.wav` conversion.
+2. Carefully handled dot-truncation logic when parsing directory paths to ensure filenames are extracted correctly regardless of directory naming conventions (like `.zip` structure with dots).
+3. Updated `TODO.md`, `ROADMAP.md`, `CHANGELOG.md`, and `MEMORY.md` to reflect the accomplished tasks and code memory.
 
-## Next Steps
-- Expand Multiplayer/Online features, especially ghost racing.
-
-- Clean up legacy Rollup plugin dependencies. Attempting to upgrade `rollup-plugin-typescript` to `@rollup/plugin-typescript` causes peer dependency cascades with `@rollup/plugin-commonjs`, currently resolved via `--legacy-peer-deps`. Resolving this may require a full rollup upgrade cycle.
+## Next logical steps
+- Check if multiplayer/online ghost racing can be implemented.
+- Explore level editor components inside the browser.
+- Continue investigating potential feature expansions defined in `IDEAS.md`.

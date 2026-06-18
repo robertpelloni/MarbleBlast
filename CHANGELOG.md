@@ -11,4 +11,5 @@ See `version_history.md` for historical changes.
 - Upgraded comprehensive AI planning documentation.
 
 ## Unreleased
+- Support native `Ogg/Vorbis` for uncompressed audio in older Torque files, preferring `.ogg` versions seamlessly when a `.wav` is requested.
 - Initialized deep documentation: VISION, ROADMAP, TODO, AGENTS, etc.

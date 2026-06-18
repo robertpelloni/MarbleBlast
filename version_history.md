@@ -1,5 +1,16 @@
 # Version History
 
+## 2.6.20
+- Added seamless support for natively loading `.ogg` Vorbis audio in older Torque levels, even when `.wav` paths are requested.
+
+## 2.6.19
+- Added fully featured Gamepad Mapping UI to options (MBG & MBP). Users can now directly configure physical gamepad buttons to logical inputs visually.
+
+## 2.6.18
+- Refactored options mapping system for controller bindings using StorageManager dynamically.
+- Included `PROJECT_STRUCTURE.md` for understanding dependencies.
+- Upgraded comprehensive AI planning documentation.
+
 ## 2.6.17
 - Fixed broken collision on interiors generated with csx3dif and io_dif (Blender)
 
