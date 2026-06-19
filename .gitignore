@@ -11,4 +11,3 @@ todo.txt
 .vscode
 **/*.DS_STORE
 # Jules AI session logs (auto-generated, not needed in repo)
-.jules/sessions/
