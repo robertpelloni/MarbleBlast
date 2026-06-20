@@ -17,4 +17,5 @@
 
 ## Completed State
 - Gamepad mappings UI and StorageManager updates to support custom axes and buttons.
+- Support native `Ogg/Vorbis` for uncompressed audio in older Torque files.
 - Project architecture documentation has been properly generated (AGENTS, ROADMAP, IDEAS, MEMORY, CHANGELOG, etc.).

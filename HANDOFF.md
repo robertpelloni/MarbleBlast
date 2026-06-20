@@ -1,14 +1,23 @@
-# HANDOFF
+# Session Handoff
 
-## Current Status
-- Read and explored the codebase (`src/ts/ui` and `src/ts/input.ts`).
-- Created deep documentation for the repository: `AGENTS.md`, `VISION.md`, `ROADMAP.md`, `CHANGELOG.md`, `TODO.md`.
-- Found a short-term issue: gamepad axes and button mappings are currently hardcoded in `src/ts/input.ts` but the TODO says `TODO: Make this configurable`.
-- Implemented fully featured and configurable Gamepad Mappings within the Options UI for both MBG and MBP.
-- Updated `options.ts` to poll for Gamepad API buttons explicitly during rebinding state.
-- Bypassed resting analog trigger inputs (axis 6 & 7) from incorrectly overriding polling.
+## Comprehensive Session Summary
+1. **Repository Synchronization:** Investigated project state, verified clean Git status, and initialized tasks based on user directives.
+2. **Audio Path Parsing Feature:**
+   - Implemented native fallback for `.ogg` (Vorbis) files replacing `.wav` paths inside older Torque levels.
+   - Modified `src/ts/audio.ts` by adding `resolveAudioPath` in `AudioManager`. This intelligently falls back from requested `.wav` files to `.ogg` natively without compromising dot-based directory structures (e.g., `missions/level1.0/sound/`).
+3. **Architecture Documentation & Governance:**
+   - Modified `TODO.md`, `ROADMAP.md`, `CHANGELOG.md`, `version_history.md`, and `MEMORY.md`.
+   - Bumped system version dynamically to `2.6.20` within `package.json` and `package-lock.json`.
+4. **Integration Testing Setup:**
+   - Compiled TS via `npm run compile` successfully.
+   - Built distribution via `npm run build` and Sarcina successfully.
+   - Project is ready for end-to-end frontend integration tests.
 
-## Next Steps
-- Expand Multiplayer/Online features, especially ghost racing.
+## Structural Shifts & System Memories
+- `AudioManager` now autonomously handles sound file extensions utilizing `ResourceManager.getFullNamesOf()` and `mission.getFullNamesOf()`.
+- Explicit care must be taken around parsing `.` when fetching file extensions out of potential directory dots.
 
-- Clean up legacy Rollup plugin dependencies. Attempting to upgrade `rollup-plugin-typescript` to `@rollup/plugin-typescript` causes peer dependency cascades with `@rollup/plugin-commonjs`, currently resolved via `--legacy-peer-deps`. Resolving this may require a full rollup upgrade cycle.
+## Next Session Focus
+- Validate End-to-End frontend functionality in Playwright if necessary.
+- Launch `npm start` and perform the final validation checks.
+- Address ideas outlined in `IDEAS.md` (Level Editor, WebRTC Multiplayer Ghost Racing).

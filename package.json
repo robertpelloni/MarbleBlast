@@ -1,6 +1,6 @@
 {
 	"name": "marbleblast",
-	"version": "2.6.19",
+	"version": "2.6.20",
 	"description": "A full web port of Marble Blast Gold.",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
