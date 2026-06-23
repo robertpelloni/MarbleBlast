@@ -537,3 +537,6 @@ This patch is meant to be an overall "quality of life" update to the port, round
 
 ## 1.0.0
 - Initial release
+## 2.6.21
+- Synchronized upstream master branch into feature branch and vice-versa
+- Resolved conflicts inside HANDOFF.md, package.json and audio.ts

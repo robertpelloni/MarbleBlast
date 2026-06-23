@@ -75,7 +75,7 @@ export class AudioManager {
 		let fileName = lastSlash !== -1 ? path.slice(lastSlash + 1) : path;
 		let dirPath = lastSlash !== -1 ? path.slice(0, lastSlash + 1) : '';
 
-		let lastDot = fileName.lastIndexOf('.');
+		let lastDot = fileName.lastIndexOf(".");
 		let baseFileName = lastDot !== -1 ? fileName.slice(0, lastDot) : fileName;
 
 		let searchPath = (dirPath.startsWith('sound/') ? '' : 'sound/') + dirPath + baseFileName;

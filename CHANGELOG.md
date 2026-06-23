@@ -13,3 +13,7 @@ See `version_history.md` for historical changes.
 ## Unreleased
 - Support native `Ogg/Vorbis` for uncompressed audio in older Torque files, preferring `.ogg` versions seamlessly when a `.wav` is requested.
 - Initialized deep documentation: VISION, ROADMAP, TODO, AGENTS, etc.
+
+## 2.6.21
+- Synchronized upstream master branch into feature branch and vice-versa
+- Resolved conflicts inside HANDOFF.md, package.json and audio.ts
