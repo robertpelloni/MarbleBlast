@@ -156,7 +156,18 @@ export abstract class OptionsScreen {
 				return this.formatGamepadKeybinding('gamepadButton' + i);
 			}
 		}
-		// Didn't find it in buttons. What about axes? (Skipped for now)
+		for (let i = 0; i < StorageManager.data.settings.gamepadAxisMapping.length; i++) {
+			// Because axis are analog and can be split into positive/negative signs, check both
+			if (StorageManager.data.settings.gamepadAxisMapping[i] === button + 'Positive') {
+				return this.formatGamepadKeybinding('axis' + i + 'sign1');
+			}
+			if (StorageManager.data.settings.gamepadAxisMapping[i] === button + 'Negative') {
+				return this.formatGamepadKeybinding('axis' + i + 'sign-1');
+			}
+			if (StorageManager.data.settings.gamepadAxisMapping[i] === button) {
+				return this.formatGamepadKeybinding('axis' + i + 'sign1');
+			}
+		}
 		return 'None';
 	}
 
@@ -269,9 +280,30 @@ export abstract class OptionsScreen {
 			}
 			let btnIndex = parseInt(value.replace('gamepadButton', ''));
 			StorageManager.data.settings.gamepadButtonMapping[btnIndex] = button;
-		} else {
-			// This branch implies axis. Note: It's extremely complex to handle dual-axis vs digital map in old port style.
-			// I'll leave the core value mapped here, although axis tracking may need manual input.ts fixes.
+		} else if (value.startsWith('axis')) {
+			let axisIndex = parseInt(value.substring(4, 5));
+			let sign = value.includes('sign-1') ? -1 : 1;
+
+			// Wipe old occurrences
+			for(let i = 0; i < StorageManager.data.settings.gamepadAxisMapping.length; i++) {
+				if (StorageManager.data.settings.gamepadAxisMapping[i] === button + (sign === 1 ? 'Positive' : 'Negative')) {
+					StorageManager.data.settings.gamepadAxisMapping[i] = '';
+				}
+				if (StorageManager.data.settings.gamepadAxisMapping[i] === button) {
+					StorageManager.data.settings.gamepadAxisMapping[i] = '';
+				}
+			}
+
+			// For analog axes, cameraX, cameraY, marbleX, marbleY are special strings that map 1:1,
+			// but we can map up/down/left/right by appending 'Positive' or 'Negative'.
+			let bindingStr = button;
+			if (button === 'up' || button === 'cameraUp' || button === 'left' || button === 'cameraLeft') {
+				bindingStr += sign === 1 ? 'Positive' : 'Negative';
+			} else if (button === 'down' || button === 'cameraDown' || button === 'right' || button === 'cameraRight') {
+				bindingStr += sign === 1 ? 'Positive' : 'Negative';
+			}
+
+			StorageManager.data.settings.gamepadAxisMapping[axisIndex] = bindingStr;
 		}
 
 		StorageManager.store();

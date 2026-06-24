@@ -231,12 +231,44 @@ const updateGamepadInput = () => {
 	}
 
 	for (let i = 0; i < gamepads[mostRecentGamepad].axes.length && i < 4; i++) {
+		let axisVal = gamepads[mostRecentGamepad].axes[i];
+		let deadzone = 0.1; // Make this configurable in the future
+		let cleanVal = Math.abs(axisVal) < deadzone ? 0 : axisVal;
+
 		let axisName = StorageManager.data?.settings.gamepadAxisMapping[i] || "";
-		if (axisName !== '') {
-			gamepadAxes[axisName as keyof typeof gamepadAxes] = gamepads[mostRecentGamepad].axes[i];
-			// Dead zone
-			if (Math.abs(gamepadAxes[axisName as keyof typeof gamepadAxes]) < 0.1)
-				gamepadAxes[axisName as keyof typeof gamepadAxes] = 0;
+		if (axisName === "") continue;
+
+		// If it's a standard full-axis mapping (e.g. "marbleX")
+		if (['marbleX', 'marbleY', 'cameraX', 'cameraY'].includes(axisName)) {
+			gamepadAxes[axisName as keyof typeof gamepadAxes] = cleanVal;
+			continue;
+		}
+
+		// It's mapped to a directional digital button like "upPositive" or "leftNegative"
+		let signStr = cleanVal < 0 ? 'Negative' : 'Positive';
+		if (Math.abs(cleanVal) > 0.5) {
+			let possibleMatches = [
+				'up' + signStr, 'down' + signStr, 'left' + signStr, 'right' + signStr,
+				'cameraUp' + signStr, 'cameraDown' + signStr, 'cameraLeft' + signStr, 'cameraRight' + signStr
+			];
+
+			for (let match of possibleMatches) {
+				if (axisName === match) {
+					let actionStr = match.replace('Positive', '').replace('Negative', '');
+					// Fake a button press
+					let gameButtonsMap = gameButtons[actionStr as keyof typeof gameButtons];
+					if (gameButtonsMap && !gameButtonsMap.includes('axis' + i + signStr)) {
+						gameButtonsMap.push('axis' + i + signStr);
+						// Simulate keydown
+						window.dispatchEvent(new KeyboardEvent('keydown', { code: 'axis' + i + signStr }));
+					}
+				}
+			}
+		} else {
+			// Clear out the simulated button presses
+			for (let key in gameButtons) {
+				gameButtons[key as keyof typeof gameButtons] = gameButtons[key as keyof typeof gameButtons].filter(x => !x.startsWith('axis' + i));
+			}
 		}
 	}
 

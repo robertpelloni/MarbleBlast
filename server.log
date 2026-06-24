@@ -1,0 +1,9 @@
+
+> marbleblast@2.6.22 start
+> node server/bundle.js
+
+Starting...
+Started server on port 8080.
+(node:2577113) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Stopping...

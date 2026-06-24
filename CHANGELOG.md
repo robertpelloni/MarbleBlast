@@ -1,3 +1,7 @@
+## 2.6.22
+- Overhauled gamepad support to allow analog stick inputs to trigger digital actions (e.g. mapping right thumbstick up to jump).
+- Initiated multiplayer latency analyzer core for ghost racing networking.
+
 # CHANGELOG
 
 See `version_history.md` for historical changes.
