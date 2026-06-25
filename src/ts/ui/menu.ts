@@ -12,6 +12,7 @@ import { LoadingScreen } from "./loading";
 import { SCALING_RATIO, setEnterFullscreenButtonVisibility } from "./misc";
 import { OptionsScreen } from "./options";
 import { PauseScreen } from "./pause_screen";
+import { LevelEditor } from "./editor";
 
 export abstract class Menu {
 	home: HomeScreen;
@@ -22,6 +23,7 @@ export abstract class Menu {
 	hud: Hud;
 	pauseScreen: PauseScreen;
 	finishScreen: FinishScreen;
+	editor: LevelEditor;
 
 	menuDiv: HTMLDivElement;
 	backgroundImage: HTMLImageElement;
@@ -338,7 +340,8 @@ export abstract class Menu {
 	async init() {
 		mainAudioManager.setAssetPath(this.audioAssetPath);
 		await mainAudioManager.loadBuffers([this.menuMusicSrc, 'buttonover.wav', 'buttonpress.wav']);
-		await Promise.all([this.home.init(), this.levelSelect.init(), this.finishScreen.init(), this.optionsScreen.init(), this.helpScreen.init()]);
+		this.editor = new LevelEditor(this);
+		await Promise.all([this.home.init(), this.levelSelect.init(), this.finishScreen.init(), this.optionsScreen.init(), this.helpScreen.init(), this.editor.init()]);
 
 		// Load pop-up stuff:
 		await ResourceManager.loadImages([this.popupBackgroundSrc]);

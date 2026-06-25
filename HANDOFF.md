@@ -15,4 +15,4 @@
 
 ## Next Session Focus
 - Full implementation of Ghost Racing overlays inside `level.ts` and `video_renderer.ts` utilizing `multiplayer_latency.ts`.
-- Add browser-based level editor UI.
+- Expand the `LevelEditor` functionality (drag/drop visual 3D placing) hooked into `Level` objects.

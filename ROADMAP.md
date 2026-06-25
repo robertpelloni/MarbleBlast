@@ -5,7 +5,7 @@
 - Fully polished gamepad support with configurable axes and buttons mappings in the Options UI.
 - Improve Mobile/Touch support.
 - Improve Multiplayer/Online features if applicable.
-- Full Custom Level Creator/Editor inside the browser.
+- Full Custom Level Creator/Editor inside the browser (Initial UI overlay integration complete).
 - Port or support more assets formats (Currently implemented drag-and-drop support for .mis parsing directly into the browser session).
 
 ## Current State
