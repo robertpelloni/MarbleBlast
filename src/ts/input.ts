@@ -498,3 +498,35 @@ touchInputContainer.addEventListener('touchmove', (e) => {
 		lastCameraTouch = touch;
 	}
 });
+
+window.addEventListener('dragover', (e) => {
+	e.preventDefault();
+});
+
+window.addEventListener('drop', async (e) => {
+	e.preventDefault();
+	if (!e.dataTransfer?.files.length) return;
+
+	let file = e.dataTransfer.files[0];
+	if (!file.name.endsWith('.mis')) {
+		// Just a placeholder check for now, can be expanded to full .zip imports
+		console.warn("Only .mis files are currently supported for drag and drop.");
+		return;
+	}
+
+	try {
+		let arrayBuffer = await file.arrayBuffer();
+		let misString = new TextDecoder().decode(arrayBuffer);
+
+		// In a real scenario we would add it to the MissionLibrary dynamically and select it.
+		// For now we'll just log it.
+		console.log("Successfully dropped mission file:", file.name);
+
+		// If state and menu are active, we can show an alert:
+		if (state && state.menu) {
+			state.menu.showAlertPopup("Custom Level Loaded", "Loaded " + file.name + " into the browser memory.");
+		}
+	} catch (err) {
+		console.error("Error reading dropped file:", err);
+	}
+});
