@@ -1,5 +1,9 @@
 import { Menu } from "./menu";
 import { state } from "../state";
+import { StorageManager } from "../storage";
+import { MisParser } from "../parsing/mis_parser";
+import { Mission } from "../mission";
+import { MissionLibrary } from "../mission_library";
 
 export class LevelEditor {
 	menu: Menu;
@@ -39,6 +43,65 @@ export class LevelEditor {
 		});
 		this.div.appendChild(this.homeButton);
 
+		let toolsPanel = document.createElement('div');
+		toolsPanel.style.position = 'absolute';
+		toolsPanel.style.right = '20px';
+		toolsPanel.style.top = '100px';
+		toolsPanel.style.width = '300px';
+		toolsPanel.style.backgroundColor = 'rgba(50, 50, 50, 0.9)';
+		toolsPanel.style.padding = '10px';
+		toolsPanel.style.color = 'white';
+		toolsPanel.style.borderRadius = '8px';
+		toolsPanel.style.display = 'flex';
+		toolsPanel.style.flexDirection = 'column';
+		toolsPanel.style.gap = '10px';
+
+		let loadLabel = document.createElement('h3');
+		loadLabel.textContent = 'Saved Levels';
+		toolsPanel.appendChild(loadLabel);
+
+		let levelList = document.createElement('select');
+		levelList.size = 5;
+		toolsPanel.appendChild(levelList);
+
+		let loadBtn = document.createElement('button');
+		loadBtn.textContent = 'Load Selected';
+		loadBtn.onclick = async () => {
+			if (levelList.value) {
+				let misStr = await StorageManager.databaseGet('keyvalue', levelList.value) as string;
+				if (misStr) {
+					try {
+						let misFile = new MisParser(misStr).parse();
+						let newMission = Mission.fromMisFile('custom/editor/' + levelList.value, misFile);
+						MissionLibrary.allMissions.push(newMission);
+						alert("Loaded mission!");
+					} catch(e) {
+						alert("Failed to parse mission");
+					}
+				}
+			}
+		};
+		toolsPanel.appendChild(loadBtn);
+
+		let saveBtn = document.createElement('button');
+		saveBtn.textContent = 'Save New Level';
+		saveBtn.onclick = async () => {
+			let name = prompt("Enter level name:");
+			if (name) {
+				// Stub: we'd serialize the live scene graph here
+				let fakeMisStr = "//--- OBJECT WRITE BEGIN ---\nnew SimGroup(MissionGroup) {\n};\n//--- OBJECT WRITE END ---";
+				await StorageManager.databasePut('keyvalue', fakeMisStr, 'editorLevel_' + name);
+				this.refreshLevelList(levelList);
+				alert("Saved level to local storage!");
+			}
+		};
+		toolsPanel.appendChild(saveBtn);
+
+		this.div.appendChild(toolsPanel);
+
+		// Initial populate
+		this.refreshLevelList(levelList);
+
 		let toolBar = document.createElement('div');
 		toolBar.style.position = 'absolute';
 		toolBar.style.bottom = '20px';
@@ -74,4 +137,18 @@ export class LevelEditor {
 	hide() {
 		this.div.classList.add('hidden');
 	}
+
+	async refreshLevelList(list: HTMLSelectElement) {
+		list.innerHTML = '';
+		let keys = await StorageManager.databaseGetAllKeys('keyvalue');
+		for (let key of keys) {
+			if (typeof key === 'string' && key.startsWith('editorLevel_')) {
+				let opt = document.createElement('option');
+				opt.value = key;
+				opt.textContent = key.replace('editorLevel_', '');
+				list.appendChild(opt);
+			}
+		}
+	}
+
 }

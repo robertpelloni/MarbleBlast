@@ -392,6 +392,18 @@ export abstract class StorageManager {
 		return request.result ?? null;
 	}
 
+	static async databaseGetAllKeys(storeName: string): Promise<string[]> {
+		await this.idbDatabaseLoading;
+
+		let db = this.idbDatabase;
+		let transaction = db.transaction(storeName, 'readonly');
+		let store = transaction.objectStore(storeName);
+		let request = store.getAllKeys();
+
+		await new Promise(resolve => request.onsuccess = resolve);
+		return (request.result as unknown as string[]) || [];
+	}
+
 	/** Makes sure the second parameter has the same deep structure as the first. */
 	static correctFields<T extends object>(truth: T, obj: T) {
 		// Look for all fields present in the truth but not present in the object
