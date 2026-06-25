@@ -1,6 +1,7 @@
 ## 2.6.22
 - Overhauled gamepad support to allow analog stick inputs to trigger digital actions (e.g. mapping right thumbstick up to jump).
 - Initiated multiplayer latency analyzer core for ghost racing networking.
+- Added drag and drop support for loading custom .mis files natively into the browser.
 
 # CHANGELOG
 

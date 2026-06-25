@@ -1,5 +1,8 @@
 import { state } from "./state";
 import { StorageManager } from "./storage";
+import { MisParser } from "./parsing/mis_parser";
+import { Mission } from "./mission";
+import { MissionLibrary } from "./mission_library";
 import { SCALING_RATIO } from "./ui/misc";
 import { Util } from "./util";
 
@@ -518,13 +521,35 @@ window.addEventListener('drop', async (e) => {
 		let arrayBuffer = await file.arrayBuffer();
 		let misString = new TextDecoder().decode(arrayBuffer);
 
-		// In a real scenario we would add it to the MissionLibrary dynamically and select it.
-		// For now we'll just log it.
 		console.log("Successfully dropped mission file:", file.name);
 
-		// If state and menu are active, we can show an alert:
+		// 1. Parse the dropped mis file
+		// (Avoid dynamic import to bypass TS1323)
+		let misFile = new MisParser(misString).parse();
+
+		// 2. Wrap it into a Mission object. We prefix the path to indicate it is a local drop.
+		let virtualPath = 'custom/dropped/' + file.name;
+		let newMission = Mission.fromMisFile(virtualPath, misFile);
+		newMission.id = Math.floor(Math.random() * 10000000); // Give it a fake ID
+
+		// 3. Inject it into MissionLibrary
+		MissionLibrary.allMissions.push(newMission);
+
+		// Add it to the correct custom array based on modification
+		if (state && state.modification) {
+			if (state.modification === 'gold') {
+				MissionLibrary.goldCustom.push(newMission);
+			} else if (state.modification === 'platinum') {
+				MissionLibrary.platinumCustom.push(newMission);
+			} else if (state.modification === 'ultra') {
+				MissionLibrary.ultraCustom.push(newMission);
+			}
+		} else {
+			MissionLibrary.goldCustom.push(newMission);
+		}
+
 		if (state && state.menu) {
-			state.menu.showAlertPopup("Custom Level Loaded", "Loaded " + file.name + " into the browser memory.");
+			state.menu.showAlertPopup("Custom Level Loaded", "Loaded " + file.name + " into the custom levels tab.");
 		}
 	} catch (err) {
 		console.error("Error reading dropped file:", err);

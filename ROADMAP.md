@@ -6,7 +6,7 @@
 - Improve Mobile/Touch support.
 - Improve Multiplayer/Online features if applicable.
 - Full Custom Level Creator/Editor inside the browser.
-- Port or support more assets formats.
+- Port or support more assets formats (Currently implemented drag-and-drop support for .mis parsing directly into the browser session).
 
 ## Current State
 - The game implements almost 4000 levels (including customs).
