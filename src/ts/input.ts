@@ -394,12 +394,16 @@ export const maybeShowTouchControls = () => {
 	touchInputContainer.style.display = Util.isTouchDevice? 'block' : 'none';
 };
 
-export const setTouchControlMode = (mode: 'normal' | 'replay') => {
+export const setTouchControlMode = (mode: 'normal' | 'replay' | 'editor') => {
 	if (mode === 'normal') {
 		[movementJoystick, jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = '');
 	} else if (mode === 'replay') {
 		// Hide everything but pause and replay buttons
 		[movementJoystick, jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = 'none');
+	} else if (mode === 'editor') {
+		// Keep movement but hide jump/use/blast
+		[jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = 'none');
+		movementJoystick.style.display = '';
 	}
 };
 
