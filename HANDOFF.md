@@ -15,4 +15,5 @@
 
 ## Next Session Focus
 - Full implementation of Ghost Racing overlays inside `level.ts` and `video_renderer.ts` utilizing `multiplayer_latency.ts`.
-- Expand the `LevelEditor` functionality (drag/drop visual 3D placing) hooked into `Level` objects.
+- Integrate WebRTC into `LatencyAnalyzer` for the final Ghost Racing multiplayer features.
+- Connect 3D rendering interactions (raycasting) inside `level.ts` to the `editor.ts` layout for true visual editing.

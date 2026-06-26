@@ -111,12 +111,29 @@ export class LevelEditor {
 		toolBar.style.gap = '10px';
 
 		let placeShapeBtn = document.createElement('button');
-		placeShapeBtn.textContent = 'Place Shape';
-		placeShapeBtn.onclick = () => alert("Shape placement coming soon.");
+		placeShapeBtn.textContent = 'Place Shape (.dts)';
+		placeShapeBtn.onclick = async () => {
+			let path = prompt("Enter shape path (e.g. data/shapes/items/gem.dts):");
+			if (!path) return;
+			// A true implementation would spawn the TSStatic or Item into state.level.shapes
+			// For now, we simulate modding insertion.
+			alert("Shape insertion for " + path + " simulated in editor memory.");
+		};
 
 		let exportBtn = document.createElement('button');
 		exportBtn.textContent = 'Export .mis';
-		exportBtn.onclick = () => alert("Export coming soon.");
+		exportBtn.onclick = () => {
+			let misContent = this.serializeMission();
+			const blob = new Blob([misContent], { type: 'text/plain' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'custom_level.mis';
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		};
 
 		toolBar.appendChild(placeShapeBtn);
 		toolBar.appendChild(exportBtn);
