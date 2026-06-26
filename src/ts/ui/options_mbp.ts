@@ -376,7 +376,17 @@ export class MbpOptionsScreen extends OptionsScreen {
 		element.append(p, button, bindingLabel);
 		container.appendChild(element);
 
-		this.updateFuncs.push(() => bindingLabel.textContent = isGamepad ? this.formatGamepadKeybindingForButton(key) : this.formatKeybinding(key));
+		this.updateFuncs.push(() => {
+			bindingLabel.textContent = isGamepad ? this.formatGamepadKeybindingForButton(key) : this.formatKeybinding(key);
+			// Tooltips for UX Polish
+			if (bindingLabel.textContent !== 'None') {
+				bindingLabel.style.color = '#ffff00';
+				bindingLabel.title = "Mapped to " + bindingLabel.textContent;
+			} else {
+				bindingLabel.style.color = 'white';
+				bindingLabel.title = "Click button to map";
+			}
+		});
 	}
 
 	/** Adds a configurable button element. */

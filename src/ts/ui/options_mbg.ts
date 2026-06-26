@@ -544,7 +544,17 @@ export class MbgOptionsScreen extends OptionsScreen {
 			bindingLabel.style.width = '100px';
 			bindingLabel.style.textAlign = 'right';
 
-			this.updateFuncs.push(() => bindingLabel.textContent = this.formatGamepadKeybindingForButton(key));
+			this.updateFuncs.push(() => {
+				bindingLabel.textContent = this.formatGamepadKeybindingForButton(key);
+				// Add visual feedback class if binding exists
+				if (bindingLabel.textContent !== 'None') {
+					bindingLabel.style.color = '#ffff00';
+					bindingLabel.title = "Mapped to " + bindingLabel.textContent;
+				} else {
+					bindingLabel.style.color = 'white';
+					bindingLabel.title = "Click button to map";
+				}
+			});
 			bindingLabel.textContent = this.formatGamepadKeybindingForButton(key);
 
 			rightContainer.append(button, bindingLabel);
