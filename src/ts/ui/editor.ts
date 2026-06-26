@@ -89,8 +89,8 @@ export class LevelEditor {
 			let name = prompt("Enter level name:");
 			if (name) {
 				// Stub: we'd serialize the live scene graph here
-				let fakeMisStr = "//--- OBJECT WRITE BEGIN ---\nnew SimGroup(MissionGroup) {\n};\n//--- OBJECT WRITE END ---";
-				await StorageManager.databasePut('keyvalue', fakeMisStr, 'editorLevel_' + name);
+				let misStr = this.serializeMission();
+				await StorageManager.databasePut('keyvalue', misStr, 'editorLevel_' + name);
 				this.refreshLevelList(levelList);
 				alert("Saved level to local storage!");
 			}
@@ -127,6 +127,43 @@ export class LevelEditor {
 
 	async init() {
 		// Load necessary editor UI textures
+	}
+
+	/** Converts the current level state back into a .mis file string */
+	serializeMission() {
+		// Basic stub for mission serialization
+		let misString = "//--- OBJECT WRITE BEGIN ---\n";
+		misString += "new SimGroup(MissionGroup) {\n";
+
+		// In the future, this iterates state.level.shapes, interiors, etc.
+		// For now, inject a basic info block
+		misString += "  new ScriptObject(MissionInfo) {\n";
+		misString += "    name = \"New Editor Level\";\n";
+		misString += "    desc = \"Created in the MarbleBlast Web Editor.\";\n";
+		misString += "    type = \"Custom\";\n";
+		misString += "  };\n";
+
+		misString += "  new MissionArea(MissionArea) {\n";
+		misString += "    area = \"-360 -648 720 1296\";\n";
+		misString += "    flightCeiling = \"300\";\n";
+		misString += "    flightCeilingRange = \"20\";\n";
+		misString += "  };\n";
+
+		misString += "  new Sky(Sky) {\n";
+		misString += "    materialList = \"~/data/skies/sky_day.dml\";\n";
+		misString += "  };\n";
+
+		misString += "  new StaticShape(StartPoint) {\n";
+		misString += "    position = \"0 0 0\";\n";
+		misString += "    rotation = \"1 0 0 0\";\n";
+		misString += "    scale = \"1 1 1\";\n";
+		misString += "    datablock = \"StartPad\";\n";
+		misString += "  };\n";
+
+		misString += "};\n";
+		misString += "//--- OBJECT WRITE END ---";
+
+		return misString;
 	}
 
 	show() {
