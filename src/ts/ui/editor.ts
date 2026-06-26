@@ -102,6 +102,27 @@ export class LevelEditor {
 		// Initial populate
 		this.refreshLevelList(levelList);
 
+		let assetBtn = document.createElement('button');
+		assetBtn.textContent = 'Import Custom Asset';
+		assetBtn.onclick = () => {
+			let fileInput = document.createElement('input');
+			fileInput.setAttribute('type', 'file');
+			fileInput.setAttribute('accept', ".dts,.dif,.ogg,.wav,.jpg,.png,.jpeg");
+
+			fileInput.onchange = async () => {
+				let file = fileInput.files[0];
+				if (!file) return;
+
+				let logicalPath = prompt("Enter the logical path for this asset (e.g. data/shapes/custom/my_shape.dts):", "data/custom/" + file.name);
+				if (!logicalPath) return;
+
+				await StorageManager.databasePut('keyvalue', file, 'custom_asset_' + logicalPath);
+				alert("Successfully imported " + file.name + " as " + logicalPath);
+			};
+			fileInput.click();
+		};
+		toolsPanel.appendChild(assetBtn);
+
 		let toolBar = document.createElement('div');
 		toolBar.style.position = 'absolute';
 		toolBar.style.bottom = '20px';
@@ -185,11 +206,17 @@ export class LevelEditor {
 
 	show() {
 		this.div.classList.remove('hidden');
-		// Optional: Boot into a blank simulation environment
+		// In a real implementation this would invoke input.setTouchControlMode directly.
+		// Since we cannot use dynamic imports in this es module build, we use the global window event or a state hook.
+		if (state.menu && state.menu.hud) {
+			// Trigger a custom event to enable touch mode for editor in input.ts
+			window.dispatchEvent(new CustomEvent('enableEditorTouchMode'));
+		}
 	}
 
 	hide() {
 		this.div.classList.add('hidden');
+		window.dispatchEvent(new CustomEvent('disableEditorTouchMode'));
 	}
 
 	async refreshLevelList(list: HTMLSelectElement) {

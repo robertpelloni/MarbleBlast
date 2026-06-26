@@ -1,6 +1,7 @@
 import { DdsParser } from "./parsing/dds_parser";
 import { Texture } from "./rendering/texture";
 import { state } from "./state";
+import { StorageManager } from "./storage";
 import { mainRenderer } from "./ui/misc";
 
 const imageCacheElement = document.querySelector('#image-cache');
@@ -242,7 +243,18 @@ export abstract class ResourceManager {
 
 	/** Fetches a URL until a response a received. */
 	static retryFetch(input: RequestInfo, init?: RequestInit) {
-		return new Promise<Blob>(resolve => {
+		return new Promise<Blob>(async resolve => {
+			if (typeof input === 'string' && input.indexOf('/api/') === -1) {
+				// Strip leading slashes and asset prefixes to find logical path
+				let logicalPath = input.replace('./assets/', '').replace('/assets/', '');
+				let customAsset: Blob = null;
+				try { customAsset = await StorageManager.databaseGet('keyvalue', 'custom_asset_' + logicalPath) as Blob; } catch(e) {}
+				if (customAsset instanceof Blob) {
+					resolve(customAsset);
+					return;
+				}
+			}
+
 			const attempt = async () => {
 				try {
 					let response = await fetch(input, init);

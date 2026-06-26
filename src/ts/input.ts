@@ -559,3 +559,6 @@ window.addEventListener('drop', async (e) => {
 		console.error("Error reading dropped file:", err);
 	}
 });
+
+window.addEventListener('enableEditorTouchMode', () => { setTouchControlMode('editor'); maybeShowTouchControls(); touchInputContainer.style.zIndex = '1001'; });
+window.addEventListener('disableEditorTouchMode', () => { hideTouchControls(); });
