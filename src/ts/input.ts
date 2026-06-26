@@ -235,7 +235,7 @@ const updateGamepadInput = () => {
 
 	for (let i = 0; i < gamepads[mostRecentGamepad].axes.length && i < 4; i++) {
 		let axisVal = gamepads[mostRecentGamepad].axes[i];
-		let deadzone = 0.1; // Make this configurable in the future
+		let deadzone = 0.15; // Increased deadzone slightly to prevent drifting digital inputs
 		let cleanVal = Math.abs(axisVal) < deadzone ? 0 : axisVal;
 
 		let axisName = StorageManager.data?.settings.gamepadAxisMapping[i] || "";
@@ -247,11 +247,17 @@ const updateGamepadInput = () => {
 			continue;
 		}
 
+		// Clear previously simulated button presses first
+		for (let key in gameButtons) {
+			gameButtons[key as keyof typeof gameButtons] = gameButtons[key as keyof typeof gameButtons].filter(x => !x.startsWith('axis' + i));
+		}
+
 		// It's mapped to a directional digital button like "upPositive" or "leftNegative"
-		let signStr = cleanVal < 0 ? 'Negative' : 'Positive';
-		if (Math.abs(cleanVal) > 0.5) {
+		if (Math.abs(cleanVal) > deadzone) {
+			let signStr = cleanVal < 0 ? 'Negative' : 'Positive';
 			let possibleMatches = [
 				'up' + signStr, 'down' + signStr, 'left' + signStr, 'right' + signStr,
+				'jump' + signStr, 'use' + signStr, 'blast' + signStr,
 				'cameraUp' + signStr, 'cameraDown' + signStr, 'cameraLeft' + signStr, 'cameraRight' + signStr
 			];
 
@@ -262,15 +268,9 @@ const updateGamepadInput = () => {
 					let gameButtonsMap = gameButtons[actionStr as keyof typeof gameButtons];
 					if (gameButtonsMap && !gameButtonsMap.includes('axis' + i + signStr)) {
 						gameButtonsMap.push('axis' + i + signStr);
-						// Simulate keydown
 						window.dispatchEvent(new KeyboardEvent('keydown', { code: 'axis' + i + signStr }));
 					}
 				}
-			}
-		} else {
-			// Clear out the simulated button presses
-			for (let key in gameButtons) {
-				gameButtons[key as keyof typeof gameButtons] = gameButtons[key as keyof typeof gameButtons].filter(x => !x.startsWith('axis' + i));
 			}
 		}
 	}

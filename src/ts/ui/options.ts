@@ -172,6 +172,7 @@ export abstract class OptionsScreen {
 	}
 
 	formatGamepadKeybinding(value: string) {
+		if (!value) return 'None';
 		if (value.startsWith('gamepadButton')) {
 			let index = value.replace('gamepadButton', '');
 			let mapping: Record<string, string> = {
