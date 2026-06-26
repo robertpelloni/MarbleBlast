@@ -164,9 +164,9 @@ export const isPressedByNonLMB = (buttonName: keyof typeof gameButtons) => {
 	return (gameButtons[buttonName].filter(x => x !== 'LMB').length > 0);
 };
 
-/** Determine if a button is pressed by a gamepad. */
+/** Determine if a button is pressed by a gamepad (button or mapped axis). */
 export const isPressedByGamepad = (buttonName: keyof typeof gameButtons) => {
-	return gameButtons[buttonName].find(x => x.startsWith('gamepadButton')) !== undefined;
+	return gameButtons[buttonName].find(x => x.startsWith('gamepadButton') || x.startsWith('axis')) !== undefined;
 };
 
 /** Determine if a button is only pressed by one presser. */
