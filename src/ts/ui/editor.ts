@@ -137,7 +137,7 @@ export class LevelEditor {
 			let path = prompt("Enter shape path (e.g. data/shapes/items/gem.dts):");
 			if (!path) return;
 			if (!state.level) {
-				alert("You must be in a level to place shapes!");
+				state.menu.showAlertPopup("Editor Error", "You must be in a level to place shapes!");
 				return;
 			}
 
@@ -157,9 +157,9 @@ export class LevelEditor {
 
 			try {
 				await state.level.addTSStatic(fakeElement as any);
-				alert("Successfully spawned shape " + path + " at " + pos.toArray().map(x => x.toFixed(2)).join(', '));
+				state.menu.showAlertPopup("Success", "Spawned shape " + path + " at " + pos.toArray().map(x => x.toFixed(2)).join(', '));
 			} catch(e) {
-				alert("Failed to spawn shape! Ensure the asset is cached or valid.");
+				state.menu.showAlertPopup("Editor Error", "Failed to spawn shape! Ensure the asset is cached or valid.");
 			}
 		};
 
