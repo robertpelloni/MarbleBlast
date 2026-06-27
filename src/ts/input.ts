@@ -310,6 +310,7 @@ export let normalizedJoystickHandlePosition: {x: number, y: number} = null;
 let movementAreaTouchIdentifier: number = null;
 let cameraAreaTouchIdentifier: number = null;
 let lastCameraTouch: Touch = null;
+let lastCameraTouchTime: number = 0;
 let joystickAsCameraTouches: Touch[] = [];
 
 export let useEnabled = false;
@@ -368,6 +369,7 @@ const setupTouchButton = (element: HTMLImageElement, button: keyof typeof gameBu
 const startCameraMovement = (touch: Touch) => {
 	cameraAreaTouchIdentifier = touch.identifier;
 	lastCameraTouch = touch;
+	lastCameraTouchTime = performance.now();
 };
 
 const startCameraMovementFromButton = (touch: Touch) => {
