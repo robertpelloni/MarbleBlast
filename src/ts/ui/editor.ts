@@ -136,9 +136,31 @@ export class LevelEditor {
 		placeShapeBtn.onclick = async () => {
 			let path = prompt("Enter shape path (e.g. data/shapes/items/gem.dts):");
 			if (!path) return;
-			// A true implementation would spawn the TSStatic or Item into state.level.shapes
-			// For now, we simulate modding insertion.
-			alert("Shape insertion for " + path + " simulated in editor memory.");
+			if (!state.level) {
+				alert("You must be in a level to place shapes!");
+				return;
+			}
+
+			// We dynamically inject a TSStatic into the level
+			let pos = state.level.marble.group.position.clone();
+			pos.z += 2; // spawn above marble
+
+			let fakeElement = {
+				_type: 'TSStatic',
+				_name: 'CustomShape',
+				_id: Math.floor(Math.random() * 100000),
+				position: pos.x + ' ' + pos.y + ' ' + pos.z,
+				rotation: '1 0 0 0',
+				scale: '1 1 1',
+				shapename: '~/data/' + path
+			};
+
+			try {
+				await state.level.addTSStatic(fakeElement as any);
+				alert("Successfully spawned shape " + path + " at " + pos.toArray().map(x => x.toFixed(2)).join(', '));
+			} catch(e) {
+				alert("Failed to spawn shape! Ensure the asset is cached or valid.");
+			}
 		};
 
 		let exportBtn = document.createElement('button');
