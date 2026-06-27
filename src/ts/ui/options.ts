@@ -250,6 +250,10 @@ export abstract class OptionsScreen {
 	}
 
 	setGamepadKeybinding(button: keyof typeof StorageManager.data.settings.gameButtonMapping, value: string) {
+		// Enforce axis polarity normalization
+		if (value.startsWith('axis')) {
+			value = value.replace('sign-1', 'Negative').replace('sign1', 'Positive');
+		}
 		let map = (state.modification === 'gold')? buttonToDisplayNameMbg : buttonToDisplayNameMbp;
 
 		// Note: Gamepad binding has a completely different logic since gameButtonMapping isn't populated here.
