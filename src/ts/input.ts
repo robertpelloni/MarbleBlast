@@ -249,11 +249,7 @@ const updateGamepadInput = () => {
 
 		// Clear previously simulated button presses first
 		for (let key in gameButtons) {
-			let castKey = key as keyof typeof gameButtons;
-			let idx = gameButtons[castKey].findIndex(x => x.startsWith('axis' + i));
-			if (idx !== -1) {
-				setPressed(castKey as keyof typeof StorageManager.data.settings.gameButtonMapping, gameButtons[castKey][idx], false);
-			}
+			gameButtons[key as keyof typeof gameButtons] = gameButtons[key as keyof typeof gameButtons].filter(x => !x.startsWith('axis' + i));
 		}
 
 		// It's mapped to a directional digital button like "upPositive" or "leftNegative"
@@ -271,7 +267,8 @@ const updateGamepadInput = () => {
 					// Fake a button press
 					let gameButtonsMap = gameButtons[actionStr as keyof typeof gameButtons];
 					if (gameButtonsMap && !gameButtonsMap.includes('axis' + i + signStr)) {
-						setPressed(actionStr as keyof typeof StorageManager.data.settings.gameButtonMapping, 'axis' + i + signStr, true);
+						gameButtonsMap.push('axis' + i + signStr);
+						window.dispatchEvent(new KeyboardEvent('keydown', { code: 'axis' + i + signStr }));
 					}
 				}
 			}
@@ -400,19 +397,13 @@ export const maybeShowTouchControls = () => {
 export const setTouchControlMode = (mode: 'normal' | 'replay' | 'editor') => {
 	if (mode === 'normal') {
 		[movementJoystick, jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = '');
-		movementAreaElement.style.pointerEvents = '';
-		cameraAreaElement.style.pointerEvents = '';
 	} else if (mode === 'replay') {
 		// Hide everything but pause and replay buttons
 		[movementJoystick, jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = 'none');
-		movementAreaElement.style.pointerEvents = 'none';
-		cameraAreaElement.style.pointerEvents = 'none';
 	} else if (mode === 'editor') {
 		// Keep movement but hide jump/use/blast
 		[jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = 'none');
-		movementJoystick.style.display = 'none'; // Don't show joystick in editor visually to not clutter screen
-		movementAreaElement.style.pointerEvents = 'none';
-		cameraAreaElement.style.pointerEvents = 'none';
+		movementJoystick.style.display = '';
 	}
 };
 
@@ -454,21 +445,11 @@ const updateJoystickHandlePosition = (touch: Touch) => {
 	let joystickHandleSize = JOYSTICK_HANDLE_SIZE_FACTOR * StorageManager.data.settings.joystickSize;
 	let innerRadius = (joystickSize - joystickHandleSize) / 2;
 
-	let dx = (touch.clientX * SCALING_RATIO - joystickPosition.x);
-	let dy = (touch.clientY * SCALING_RATIO - joystickPosition.y);
-	let distance = Math.hypot(dx, dy);
+	normalizedJoystickHandlePosition.x = Util.clamp((touch.clientX * SCALING_RATIO - joystickPosition.x) / innerRadius, -1, 1);
+	normalizedJoystickHandlePosition.y = Util.clamp((touch.clientY * SCALING_RATIO - joystickPosition.y) / innerRadius, -1, 1);
 
-	// Implement circular clamping for the virtual analog stick rather than square clamping
-	if (distance > innerRadius) {
-		dx = (dx / distance) * innerRadius;
-		dy = (dy / distance) * innerRadius;
-	}
-
-	normalizedJoystickHandlePosition.x = dx / innerRadius;
-	normalizedJoystickHandlePosition.y = dy / innerRadius;
-
-	movementJoystickHandle.style.left = dx + joystickSize/2 - joystickHandleSize/2 + 'px';
-	movementJoystickHandle.style.top = dy + joystickSize/2 - joystickHandleSize/2 + 'px';
+	movementJoystickHandle.style.left = (normalizedJoystickHandlePosition.x) * innerRadius + joystickSize/2 - joystickHandleSize/2 + 'px';
+	movementJoystickHandle.style.top = (normalizedJoystickHandlePosition.y) * innerRadius + joystickSize/2 - joystickHandleSize/2 + 'px';
 };
 
 window.addEventListener('touchend', (e) => {

@@ -2,7 +2,7 @@
 
 ## Long Term Goals
 - Complete feature parity with Marble Blast Gold, Platinum, and Ultra.
-- Fully polished gamepad support with configurable axes and buttons mappings in the Options UI (Complete - Analog limits successfully mapped into StorageManager).
+- Fully polished gamepad support with configurable axes and buttons mappings in the Options UI.
 - Improve Mobile/Touch support.
 - Improve Multiplayer/Online features if applicable.
 - Full Custom Level Creator/Editor inside the browser (Initial UI overlay integration complete).
