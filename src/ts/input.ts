@@ -515,9 +515,18 @@ window.addEventListener('drop', async (e) => {
 	if (!e.dataTransfer?.files.length) return;
 
 	let file = e.dataTransfer.files[0];
+
+	if (file.name.endsWith('.dts') || file.name.endsWith('.dif')) {
+		// Native Asset Drag & Drop Integration
+		let logicalPath = prompt("Enter the logical path for this asset (e.g. data/shapes/custom/my_shape.dts):", "data/custom/" + file.name);
+		if (!logicalPath) return;
+		await StorageManager.databasePut('keyvalue', file, 'custom_asset_' + logicalPath);
+		if (state && state.menu) state.menu.showAlertPopup("Custom Asset Loaded", "Successfully imported " + file.name + " as " + logicalPath);
+		return;
+	}
+
 	if (!file.name.endsWith('.mis')) {
-		// Just a placeholder check for now, can be expanded to full .zip imports
-		console.warn("Only .mis files are currently supported for drag and drop.");
+		console.warn("Only .mis, .dif, and .dts files are currently supported for drag and drop.");
 		return;
 	}
 
