@@ -70,7 +70,7 @@ export class MbpOptionsScreen extends OptionsScreen {
 			this.gamepadButton.src = this.gamepadButton.src.slice(0, -5) + 'n.png';
 			this.gamepadButton.removeAttribute('data-locked');
 		}, undefined, undefined, false);
-		this.menu.setupButton(this.gamepadButton, 'options/hotkeys', () => {
+		this.menu.setupButton(this.gamepadButton, 'options/gamepad', () => {
 			this.generalContainer.classList.add('hidden');
 			this.hotkeysContainer.classList.add('hidden');
 			this.gamepadContainer.classList.remove('hidden');
