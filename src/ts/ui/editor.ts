@@ -186,7 +186,16 @@ export class LevelEditor {
 	}
 
 	async init() {
-		// Load necessary editor UI textures
+		// Set up basic click listeners for rudimentary raycasting integration
+		this.div.addEventListener('click', (e) => {
+			// This will be fleshed out by hooking into three.js Raycaster
+			// when the level is active. For now, it logs the attempt.
+			if (state.level) {
+				console.log(`Editor clicked at X:${e.clientX}, Y:${e.clientY}`);
+				// Simulated raycast hit trigger
+				// let hit = state.level.scene.raycast(e.clientX, e.clientY);
+			}
+		});
 	}
 
 	/** Converts the current level state back into a .mis file string */
