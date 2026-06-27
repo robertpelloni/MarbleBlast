@@ -191,12 +191,11 @@ export class LevelEditor {
 
 	/** Converts the current level state back into a .mis file string */
 	serializeMission() {
-		// Basic stub for mission serialization
+		// Advanced stub: pull spawned elements dynamically if in level
 		let misString = "//--- OBJECT WRITE BEGIN ---\n";
 		misString += "new SimGroup(MissionGroup) {\n";
 
-		// In the future, this iterates state.level.shapes, interiors, etc.
-		// For now, inject a basic info block
+		// Basic info block
 		misString += "  new ScriptObject(MissionInfo) {\n";
 		misString += "    name = \"New Editor Level\";\n";
 		misString += "    desc = \"Created in the MarbleBlast Web Editor.\";\n";
@@ -219,6 +218,20 @@ export class LevelEditor {
 		misString += "    scale = \"1 1 1\";\n";
 		misString += "    datablock = \"StartPad\";\n";
 		misString += "  };\n";
+
+		if (state.level) {
+			for (let shape of state.level.shapes) {
+				if (shape.isTSStatic) {
+					let pos = shape.worldPosition;
+					misString += "  new TSStatic() {\n";
+					misString += "    position = \"" + pos.x + " " + pos.y + " " + pos.z + "\";\n";
+					misString += "    rotation = \"1 0 0 0\";\n";
+					misString += "    scale = \"1 1 1\";\n";
+					misString += "    shapeName = \"~/" + shape.dtsPath + "\";\n";
+					misString += "  };\n";
+				}
+			}
+		}
 
 		misString += "};\n";
 		misString += "//--- OBJECT WRITE END ---";
