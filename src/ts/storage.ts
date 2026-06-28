@@ -48,7 +48,7 @@ export interface StorageData {
 		canvasDesynchronized: boolean,
 
 		joystickPosition: number,
-		joystickSize: number,
+
 		joystickLeftOffset: number,
 		joystickVerticalPosition: number,
 		actionButtonOrder: number,
@@ -129,7 +129,7 @@ const DEFAULT_STORAGE_DATA: StorageData = {
 		canvasDesynchronized: !/(CrOS)/.test(navigator.userAgent), // Turn it off when on ChromeOS (some people on Chromebooks have reported flickering)
 
 		joystickPosition: 0,
-		joystickSize: 250,
+
 		joystickLeftOffset: 75,
 		joystickVerticalPosition: 0.5,
 		actionButtonOrder: 0,
