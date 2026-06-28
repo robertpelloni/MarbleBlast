@@ -19,3 +19,6 @@
 - Gamepad mappings UI and StorageManager updates to support custom axes and buttons, including analog mapping to digital actions.
 - Support native `Ogg/Vorbis` for uncompressed audio in older Torque files.
 - Project architecture documentation has been properly generated (AGENTS, ROADMAP, IDEAS, MEMORY, CHANGELOG, etc.).
+
+## Structural Refactor Plans
+- Transition the heavily imperative HTML overlay system (`src/ts/ui`) to a reactive framework like Svelte to eliminate the technical debt associated with raw DOM manipulation and manual state sync logic in the Options and Editor classes.
