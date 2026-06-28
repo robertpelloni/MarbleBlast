@@ -28,6 +28,7 @@ import { isPressed, releaseAllButtons, gamepadAxes, getPressedFlag, resetPressed
 import { SmallDuctFan } from "./shapes/small_duct_fan";
 import { PathedInterior } from "./pathed_interior";
 import { Trigger } from "./triggers/trigger";
+import { LatencyAnalyzer } from "./multiplayer_latency";
 import { InBoundsTrigger } from "./triggers/in_bounds_trigger";
 import { HelpTrigger } from "./triggers/help_trigger";
 import { OutOfBoundsTrigger } from "./triggers/out_of_bounds_trigger";
@@ -160,6 +161,7 @@ export class Level extends Scheduler {
 	mission: Mission;
 	/** Whether or not this level has the classic additional features of MBU levels, such as a larger marble and the blast functionality. */
 	loadingState: LoadingState;
+	latencyAnalyzer = new LatencyAnalyzer();
 
 	scene: Scene;
 	camera: PerspectiveCamera;
@@ -1094,6 +1096,11 @@ export class Level extends Scheduler {
 	tick(time?: number) {
 		if (this.stopped) return;
 		if (this.paused) return;
+
+		// Periodically simulate networking pings for the multiplayer ghost racing logic
+		if (this.timeState.tickIndex > 0 && this.timeState.tickIndex % 60 === 0) {
+			this.latencyAnalyzer?.simulatePing();
+		}
 
 		if (time === undefined) time = performance.now();
 		let playReplay = this.replay.mode === 'playback';
