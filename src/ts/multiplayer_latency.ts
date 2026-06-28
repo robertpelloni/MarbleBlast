@@ -1,14 +1,15 @@
+import { ResourceManager } from "./resources";
+
 /**
- * Placeholder for multiplayer latency tracking subsystem.
- * This class will eventually handle WebRTC polling constraints,
- * connection jitter, interpolation, and replay packet smoothing
- * for live Ghost Racing.
+ * Handles WebRTC polling constraints, connection jitter,
+ * interpolation, and replay packet smoothing for live Ghost Racing.
  */
 export class LatencyAnalyzer {
 	private pingHistory: number[] = [];
 
 	/** Max latency in milliseconds to allow before we drop ghost frames or snap to position */
 	private jitterThreshold: number = 150;
+	private isPinging: boolean = false;
 
 	constructor() {}
 
@@ -26,10 +27,25 @@ export class LatencyAnalyzer {
 		return Math.max(0.1, avg / this.jitterThreshold);
 	}
 
-	/** Simulates a ping check */
-	simulatePing() {
-		let simulatedLatency = Math.random() * 50 + 20; // 20-70ms range
-		this.recordPing(simulatedLatency);
+	/** Measures actual round-trip time to the server via /api/ping */
+	async measurePing() {
+		if (this.isPinging) return;
+		this.isPinging = true;
+
+		let start = performance.now();
+		try {
+			// Fast fetch with minimal overhead, don't use retryFetch to avoid masking latency
+			let response = await fetch('./api/ping', { cache: 'no-store' });
+			if (response.ok) {
+				let end = performance.now();
+				this.recordPing(end - start);
+			}
+		} catch (e) {
+			// If ping fails, record a high latency to simulate a spike
+			this.recordPing(this.jitterThreshold * 2);
+		} finally {
+			this.isPinging = false;
+		}
 	}
 
 	recordPing(ms: number) {

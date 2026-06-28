@@ -257,7 +257,8 @@ export abstract class ResourceManager {
 
 			const attempt = async () => {
 				try {
-					let response = await fetch(input, init);
+					// Use fetchWithTimeout to prevent hanging on bad connections
+					let response = await this.fetchWithTimeout(input, init, 10000);
 
 					if (response.status === 404) {
 						resolve(null);
@@ -271,6 +272,24 @@ export abstract class ResourceManager {
 				}
 			};
 			attempt();
+		});
+	}
+
+	/** Fetches a URL with a timeout (default 10s). Rejects if the timeout is reached. */
+	static fetchWithTimeout(input: RequestInfo, init?: RequestInit, timeout: number = 10000) {
+		return new Promise<Response>((resolve, reject) => {
+			const controller = new AbortController();
+			const id = setTimeout(() => controller.abort(), timeout);
+
+			fetch(input, { ...init, signal: controller.signal })
+				.then((response) => {
+					clearTimeout(id);
+					resolve(response);
+				})
+				.catch((error) => {
+					clearTimeout(id);
+					reject(error);
+				});
 		});
 	}
 }

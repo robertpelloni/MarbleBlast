@@ -1099,7 +1099,7 @@ export class Level extends Scheduler {
 
 		// Periodically simulate networking pings for the multiplayer ghost racing logic
 		if (this.timeState.tickIndex > 0 && this.timeState.tickIndex % 60 === 0) {
-			this.latencyAnalyzer?.simulatePing();
+			if (this.timeState.tickIndex > 0 && this.timeState.tickIndex % 120 === 0) this.latencyAnalyzer?.measurePing(); // Ping once a second
 		}
 
 		if (time === undefined) time = performance.now();

@@ -147,6 +147,7 @@ const initServer = (port: number) => {
 					switch (pathComponents[1]) {
 						case 'directory_structure': await getDirectoryStructure(res); break;
 						case 'directory_structure_mbp': await getDirectoryStructure(res, true); break;
+						case 'ping': res.writeHead(200); res.end(); break;
 						case 'scores': await getLeaderboard(res, body); break;
 						case 'marbleland_scores': await getLeaderboardForMarbleland(res, urlObject); break;
 						case 'submit': await submitScores(res, body); break;
