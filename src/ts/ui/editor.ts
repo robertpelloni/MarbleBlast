@@ -186,16 +186,33 @@ export class LevelEditor {
 	}
 
 	async init() {
-		// Set up basic click listeners for rudimentary raycasting integration
+		// Advanced Raycasting integration for visual geometry arranging
 		this.div.addEventListener('click', (e) => {
-			// This will be fleshed out by hooking into three.js Raycaster
-			// when the level is active. For now, it logs the attempt.
-			if (state.level) {
-				console.log(`Editor clicked at X:${e.clientX}, Y:${e.clientY}`);
-				// Simulated raycast hit trigger
-				// let hit = state.level.scene.raycast(e.clientX, e.clientY);
+			if (!state.level || this.div.classList.contains('hidden')) return;
+			// Ignore clicks on UI elements (buttons/selects/etc)
+			if (e.target !== this.div) return;
+
+			// Normalize coordinates
+			let pointer = {
+				x: (e.clientX / window.innerWidth) * 2 - 1,
+				y: -(e.clientY / window.innerHeight) * 2 + 1
+			};
+
+			// Cast a ray into the scene
+			let hit = state.level.getRaycastIntersection(pointer);
+			if (hit && hit.length > 0) {
+				let firstHit = hit[0];
+				console.log("Editor raycast hit:", firstHit.object.name, "at", firstHit.point);
+				state.menu.showAlertPopup("Editor Hit", "Selected: " + (firstHit.object.name || "Unknown") + "\nPos: " + firstHit.point.toArray().map((x: number) => x.toFixed(2)).join(', '));
+			} else {
+				console.log("Editor clicked empty space");
 			}
 		});
+	}
+
+	selectObject(obj: any) {
+		console.log("Selected object in editor:", obj);
+		// Future: Populate object properties in the tools panel
 	}
 
 	/** Converts the current level state back into a .mis file string */

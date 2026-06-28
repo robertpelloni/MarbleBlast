@@ -158,6 +158,7 @@ interface OfflineSettings {
 
 /** The central control unit of gameplay. Handles loading, simulation and rendering. */
 export class Level extends Scheduler {
+	raycaster: any; // Raycaster;
 	mission: Mission;
 	/** Whether or not this level has the classic additional features of MBU levels, such as a larger marble and the blast functionality. */
 	loadingState: LoadingState;
@@ -278,6 +279,11 @@ export class Level extends Scheduler {
 	}
 
 	/** Loads all necessary resources and builds the mission. */
+	/** Helper for Editor raycasting */
+	getRaycastIntersection(pointer: {x: number, y: number}): any {
+		return null; // Stubbed to prevent TS2304 errors since Raycaster is not built into our custom renderer natively
+	}
+
 	async init() {
 		// Scan the mission for elements to determine required loading effort
 		for (let element of this.mission.allElements) {
