@@ -48,6 +48,17 @@ export class LatencyAnalyzer {
 		}
 	}
 
+	/**
+	 * Tracks WebRTC peer-to-peer data channel latency, which can differ from
+	 * server API latency. When a ghost racing match begins, we ping the peer
+	 * via the DataChannel to build a highly accurate interpolation baseline.
+	 */
+	simulatePeerPing(peerId: string) {
+		// Stub: when RTCDataChannel sends 'PING', measure RTT and feed back here
+		// For now we simulate an idealized 40ms P2P connection to verify the smoothing math
+		this.recordPing(40 + (Math.random() * 20 - 10));
+	}
+
 	recordPing(ms: number) {
 		this.pingHistory.push(ms);
 		if (this.pingHistory.length > 50) this.pingHistory.shift();
