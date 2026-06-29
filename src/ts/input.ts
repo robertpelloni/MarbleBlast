@@ -414,7 +414,7 @@ movementAreaElement.addEventListener('touchstart', (e) => {
 	movementAreaTouchIdentifier = touch.identifier;
 
 	let x: number, y: number;
-	let joystickSize = StorageManager.data.settings.joystickSize;
+	let joystickSize = (StorageManager.data.settings as any).joystickSize || 250;
 	if (StorageManager.data.settings.joystickPosition === 0) {
 		// Fixed
 		x = StorageManager.data.settings.joystickLeftOffset + joystickSize/2;
@@ -443,8 +443,8 @@ movementAreaElement.addEventListener('touchmove', (e) => {
 });
 
 const updateJoystickHandlePosition = (touch: Touch) => {
-	let joystickSize = StorageManager.data.settings.joystickSize;
-	let joystickHandleSize = JOYSTICK_HANDLE_SIZE_FACTOR * StorageManager.data.settings.joystickSize;
+	let joystickSize = (StorageManager.data.settings as any).joystickSize || 250;
+	let joystickHandleSize = JOYSTICK_HANDLE_SIZE_FACTOR * ((StorageManager.data.settings as any).joystickSize || 250);
 	let innerRadius = (joystickSize - joystickHandleSize) / 2;
 
 	normalizedJoystickHandlePosition.x = Util.clamp((touch.clientX * SCALING_RATIO - joystickPosition.x) / innerRadius, -1, 1);
@@ -497,7 +497,7 @@ touchInputContainer.addEventListener('touchmove', (e) => {
 		let movementX = (touch.clientX - lastCameraTouch.clientX) * SCALING_RATIO;
 		let movementY = (touch.clientY - lastCameraTouch.clientY) * SCALING_RATIO;
 
-		let factor = Util.lerp(1 / 1500, 1 / 50, StorageManager.data.settings.mouseSensitivity) * ((joystickAsCameraTouches.length !== 0) ? StorageManager.data.settings.actionButtonAsJoystickMultiplier : 1);
+		let factor = Util.lerp(1 / 1500, 1 / 50, StorageManager.data.settings.mouseSensitivity) * ((joystickAsCameraTouches.length !== 0) ? ((StorageManager.data.settings as any)?.actionButtonAsJoystickMultiplier || 1) : 1);
 		let yFactor = (StorageManager.data.settings.invertMouse & 0b10)? -1 : 1;
 		let freeLook = StorageManager.data.settings.alwaysFreeLook || isPressed('freeLook');
 
