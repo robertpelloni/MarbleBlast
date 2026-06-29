@@ -18,6 +18,10 @@
 5. **Touch UI Enhancements:**
    - Moved hardcoded virtual joystick UI settings into `StorageManager.data.settings`.
 
+6. **Mobile Touch Architecture Validation:**
+   - Evaluated dynamic vs fixed joystick positions and bounds clamping algorithms.
+   - Refactored options UI to correctly serialize custom sizes and thresholds for the virtual joystick system without violating strict TS typings.
+
 ## Structural Shifts & System Memories
 - Gamepads now parse `axis[Index]sign[+/-1]` formats internally within options mapping.
 

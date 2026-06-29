@@ -3,7 +3,7 @@
 ## Ongoing Observations
 - The codebase relies heavily on the `StorageManager` to serialize/deserialize data to/from `localStorage`/`IndexedDB`.
 - Options are separated between MBG (`options_mbg.ts`) and MBP (`options_mbp.ts`).
-- `input.ts` handles all input, including keyboard, mouse, touch, and gamepad. Gamepad has been upgraded to a fully dynamic mapping system utilizing `StorageManager.data.settings.gamepadButtonMapping` and `gamepadAxisMapping`.
+- `input.ts` handles all input, including keyboard, mouse, touch, and gamepad. Gamepad has been upgraded to a fully dynamic mapping system utilizing `StorageManager.data.settings.gamepadButtonMapping` and `gamepadAxisMapping`. Gamepad mappings are fully functional and configurable via the Options UI (verified end-to-end for both axes and buttons). Gamepad mappings are fully functional and configurable via the Options UI (verified end-to-end for both axes and buttons). Gamepad mappings are fully functional and configurable via the Options UI (verified end-to-end for both axes and buttons). Gamepad mappings are fully functional and configurable via the Options UI (verified end-to-end for both axes and buttons).
 - UI elements use standard HTML/CSS but there's a lot of manual DOM manipulation instead of a framework.
 - The audio engine (`AudioManager`) has been extended to prioritize loading `.ogg` over `.wav` automatically via `resolveAudioPath` by inspecting `mission.getFullNamesOf()` and `ResourceManager.getFullNamesOf()`.
 
