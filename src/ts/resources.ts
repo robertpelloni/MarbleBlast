@@ -1,6 +1,7 @@
 import { DdsParser } from "./parsing/dds_parser";
 import { Texture } from "./rendering/texture";
 import { state } from "./state";
+import { StorageManager } from "./storage";
 import { mainRenderer } from "./ui/misc";
 
 const imageCacheElement = document.querySelector('#image-cache');
@@ -242,10 +243,22 @@ export abstract class ResourceManager {
 
 	/** Fetches a URL until a response a received. */
 	static retryFetch(input: RequestInfo, init?: RequestInit) {
-		return new Promise<Blob>(resolve => {
+		return new Promise<Blob>(async resolve => {
+			if (typeof input === 'string' && input.indexOf('/api/') === -1) {
+				// Strip leading slashes and asset prefixes to find logical path
+				let logicalPath = input.replace('./assets/', '').replace('/assets/', '');
+				let customAsset: Blob = null;
+				try { customAsset = await StorageManager.databaseGet('keyvalue', 'custom_asset_' + logicalPath) as Blob; } catch(e) {}
+				if (customAsset instanceof Blob) {
+					resolve(customAsset);
+					return;
+				}
+			}
+
 			const attempt = async () => {
 				try {
-					let response = await fetch(input, init);
+					// Use fetchWithTimeout to prevent hanging on bad connections
+					let response = await this.fetchWithTimeout(input, init, 10000);
 
 					if (response.status === 404) {
 						resolve(null);
@@ -259,6 +272,24 @@ export abstract class ResourceManager {
 				}
 			};
 			attempt();
+		});
+	}
+
+	/** Fetches a URL with a timeout (default 10s). Rejects if the timeout is reached. */
+	static fetchWithTimeout(input: RequestInfo, init?: RequestInit, timeout: number = 10000) {
+		return new Promise<Response>((resolve, reject) => {
+			const controller = new AbortController();
+			const id = setTimeout(() => controller.abort(), timeout);
+
+			fetch(input, { ...init, signal: controller.signal })
+				.then((response) => {
+					clearTimeout(id);
+					resolve(response);
+				})
+				.catch((error) => {
+					clearTimeout(id);
+					reject(error);
+				});
 		});
 	}
 }

@@ -515,6 +515,44 @@ export class MbgOptionsScreen extends OptionsScreen {
 
 	generateGamepadHotkeys() {
 		this.gamepadOptionsContainer.innerHTML = '';
+
+		// Add Touch Joystick Size Slider
+		let touchJoystickDiv = document.createElement('div');
+		touchJoystickDiv.style.marginBottom = '16px';
+		touchJoystickDiv.style.borderBottom = '1px solid gray';
+		touchJoystickDiv.style.paddingBottom = '8px';
+
+		let touchLabel = document.createElement('span');
+		touchLabel.textContent = 'Touch Joystick Size: ';
+		touchJoystickDiv.appendChild(touchLabel);
+
+		let touchVal = document.createElement('span');
+		touchVal.textContent = ((StorageManager.data.settings as any).joystickSize || 250).toString() + 'px';
+		touchVal.style.float = 'right';
+		touchJoystickDiv.appendChild(touchVal);
+
+		let touchSlider = document.createElement('input');
+		touchSlider.type = 'range';
+		touchSlider.min = '100';
+		touchSlider.max = '500';
+		touchSlider.step = '10';
+		touchSlider.value = ((StorageManager.data.settings as any).joystickSize || 250).toString();
+		touchSlider.style.width = '100%';
+		touchSlider.style.marginTop = '8px';
+
+		touchSlider.addEventListener('input', () => {
+			let val = parseFloat(touchSlider.value);
+			touchVal.textContent = val.toString() + 'px';
+		});
+
+		touchSlider.addEventListener('change', () => {
+			(StorageManager.data.settings as any).joystickSize = parseFloat(touchSlider.value);
+			StorageManager.store();
+		});
+
+		touchJoystickDiv.appendChild(touchSlider);
+		this.gamepadOptionsContainer.appendChild(touchJoystickDiv);
+
 		let keys: (keyof typeof StorageManager.data.settings.gameButtonMapping)[] = [
 			'up', 'down', 'left', 'right', 'jump', 'use', 'blast',
 			'cameraUp', 'cameraDown', 'cameraLeft', 'cameraRight'
@@ -544,7 +582,17 @@ export class MbgOptionsScreen extends OptionsScreen {
 			bindingLabel.style.width = '100px';
 			bindingLabel.style.textAlign = 'right';
 
-			this.updateFuncs.push(() => bindingLabel.textContent = this.formatGamepadKeybindingForButton(key));
+			this.updateFuncs.push(() => {
+				bindingLabel.textContent = this.formatGamepadKeybindingForButton(key);
+				// Add visual feedback class if binding exists
+				if (bindingLabel.textContent !== 'None') {
+					bindingLabel.style.color = '#ffff00';
+					bindingLabel.title = "Mapped to " + bindingLabel.textContent;
+				} else {
+					bindingLabel.style.color = 'white';
+					bindingLabel.title = "Click button to map";
+				}
+			});
 			bindingLabel.textContent = this.formatGamepadKeybindingForButton(key);
 
 			rightContainer.append(button, bindingLabel);

@@ -48,7 +48,7 @@ export interface StorageData {
 		canvasDesynchronized: boolean,
 
 		joystickPosition: number,
-		joystickSize: number,
+
 		joystickLeftOffset: number,
 		joystickVerticalPosition: number,
 		actionButtonOrder: number,
@@ -129,7 +129,7 @@ const DEFAULT_STORAGE_DATA: StorageData = {
 		canvasDesynchronized: !/(CrOS)/.test(navigator.userAgent), // Turn it off when on ChromeOS (some people on Chromebooks have reported flickering)
 
 		joystickPosition: 0,
-		joystickSize: 250,
+
 		joystickLeftOffset: 75,
 		joystickVerticalPosition: 0.5,
 		actionButtonOrder: 0,
@@ -390,6 +390,18 @@ export abstract class StorageManager {
 
 		await new Promise(resolve => request.onsuccess = resolve);
 		return request.result ?? null;
+	}
+
+	static async databaseGetAllKeys(storeName: string): Promise<string[]> {
+		await this.idbDatabaseLoading;
+
+		let db = this.idbDatabase;
+		let transaction = db.transaction(storeName, 'readonly');
+		let store = transaction.objectStore(storeName);
+		let request = store.getAllKeys();
+
+		await new Promise(resolve => request.onsuccess = resolve);
+		return (request.result as unknown as string[]) || [];
 	}
 
 	/** Makes sure the second parameter has the same deep structure as the first. */

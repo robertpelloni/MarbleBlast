@@ -70,7 +70,7 @@ export class MbpOptionsScreen extends OptionsScreen {
 			this.gamepadButton.src = this.gamepadButton.src.slice(0, -5) + 'n.png';
 			this.gamepadButton.removeAttribute('data-locked');
 		}, undefined, undefined, false);
-		this.menu.setupButton(this.gamepadButton, 'options/hotkeys', () => {
+		this.menu.setupButton(this.gamepadButton, 'options/gamepad', () => {
 			this.generalContainer.classList.add('hidden');
 			this.hotkeysContainer.classList.add('hidden');
 			this.gamepadContainer.classList.remove('hidden');
@@ -376,7 +376,17 @@ export class MbpOptionsScreen extends OptionsScreen {
 		element.append(p, button, bindingLabel);
 		container.appendChild(element);
 
-		this.updateFuncs.push(() => bindingLabel.textContent = isGamepad ? this.formatGamepadKeybindingForButton(key) : this.formatKeybinding(key));
+		this.updateFuncs.push(() => {
+			bindingLabel.textContent = isGamepad ? this.formatGamepadKeybindingForButton(key) : this.formatKeybinding(key);
+			// Tooltips for UX Polish
+			if (bindingLabel.textContent !== 'None') {
+				bindingLabel.style.color = '#ffff00';
+				bindingLabel.title = "Mapped to " + bindingLabel.textContent;
+			} else {
+				bindingLabel.style.color = 'white';
+				bindingLabel.title = "Click button to map";
+			}
+		});
 	}
 
 	/** Adds a configurable button element. */

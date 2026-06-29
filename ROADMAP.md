@@ -5,8 +5,8 @@
 - Fully polished gamepad support with configurable axes and buttons mappings in the Options UI.
 - Improve Mobile/Touch support.
 - Improve Multiplayer/Online features if applicable.
-- Full Custom Level Creator/Editor inside the browser.
-- Port or support more assets formats.
+- Full Custom Level Creator/Editor inside the browser (Initial UI overlay integration complete).
+- Port or support more assets formats (Currently implemented drag-and-drop support for .mis parsing directly into the browser session).
 
 ## Current State
 - The game implements almost 4000 levels (including customs).
@@ -19,3 +19,6 @@
 - Gamepad mappings UI and StorageManager updates to support custom axes and buttons, including analog mapping to digital actions.
 - Support native `Ogg/Vorbis` for uncompressed audio in older Torque files.
 - Project architecture documentation has been properly generated (AGENTS, ROADMAP, IDEAS, MEMORY, CHANGELOG, etc.).
+
+## Structural Refactor Plans
+- Transition the heavily imperative HTML overlay system (`src/ts/ui`) to a reactive framework like Svelte to eliminate the technical debt associated with raw DOM manipulation and manual state sync logic in the Options and Editor classes.

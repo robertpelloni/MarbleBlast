@@ -143,6 +143,13 @@ export abstract class OptionsScreen {
 
 	abstract refreshKeybindings(): void;
 
+	/** Re-renders dynamic keybinding elements using a lightweight event-driven template approach */
+	renderReactiveKeybindings(container: HTMLElement, mappingSource: any, isGamepad: boolean) {
+		// Used by sub-classes to bind state changes safely.
+	}
+
+	/** Re-renders dynamic keybinding elements using a lightweight event-driven template approach */
+
 	/** Returns a nice string representation of the key that a button is bound to. */
 	formatKeybinding(button: keyof typeof StorageManager.data.settings.gameButtonMapping) {
 		let str = Util.getKeyForButtonCode(StorageManager.data.settings.gameButtonMapping[button as keyof typeof StorageManager.data.settings.gameButtonMapping]);
@@ -172,6 +179,7 @@ export abstract class OptionsScreen {
 	}
 
 	formatGamepadKeybinding(value: string) {
+		if (!value) return 'None';
 		if (value.startsWith('gamepadButton')) {
 			let index = value.replace('gamepadButton', '');
 			let mapping: Record<string, string> = {

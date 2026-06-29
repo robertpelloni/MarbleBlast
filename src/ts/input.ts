@@ -1,5 +1,8 @@
 import { state } from "./state";
 import { StorageManager } from "./storage";
+import { MisParser } from "./parsing/mis_parser";
+import { Mission } from "./mission";
+import { MissionLibrary } from "./mission_library";
 import { SCALING_RATIO } from "./ui/misc";
 import { Util } from "./util";
 
@@ -161,9 +164,9 @@ export const isPressedByNonLMB = (buttonName: keyof typeof gameButtons) => {
 	return (gameButtons[buttonName].filter(x => x !== 'LMB').length > 0);
 };
 
-/** Determine if a button is pressed by a gamepad. */
+/** Determine if a button is pressed by a gamepad (button or mapped axis). */
 export const isPressedByGamepad = (buttonName: keyof typeof gameButtons) => {
-	return gameButtons[buttonName].find(x => x.startsWith('gamepadButton')) !== undefined;
+	return gameButtons[buttonName].find(x => x.startsWith('gamepadButton') || x.startsWith('axis')) !== undefined;
 };
 
 /** Determine if a button is only pressed by one presser. */
@@ -232,7 +235,7 @@ const updateGamepadInput = () => {
 
 	for (let i = 0; i < gamepads[mostRecentGamepad].axes.length && i < 4; i++) {
 		let axisVal = gamepads[mostRecentGamepad].axes[i];
-		let deadzone = 0.1; // Make this configurable in the future
+		let deadzone = 0.15; // Increased deadzone slightly to prevent drifting digital inputs
 		let cleanVal = Math.abs(axisVal) < deadzone ? 0 : axisVal;
 
 		let axisName = StorageManager.data?.settings.gamepadAxisMapping[i] || "";
@@ -244,11 +247,17 @@ const updateGamepadInput = () => {
 			continue;
 		}
 
+		// Clear previously simulated button presses first
+		for (let key in gameButtons) {
+			gameButtons[key as keyof typeof gameButtons] = gameButtons[key as keyof typeof gameButtons].filter(x => !x.startsWith('axis' + i));
+		}
+
 		// It's mapped to a directional digital button like "upPositive" or "leftNegative"
-		let signStr = cleanVal < 0 ? 'Negative' : 'Positive';
-		if (Math.abs(cleanVal) > 0.5) {
+		if (Math.abs(cleanVal) > deadzone) {
+			let signStr = cleanVal < 0 ? 'Negative' : 'Positive';
 			let possibleMatches = [
 				'up' + signStr, 'down' + signStr, 'left' + signStr, 'right' + signStr,
+				'jump' + signStr, 'use' + signStr, 'blast' + signStr,
 				'cameraUp' + signStr, 'cameraDown' + signStr, 'cameraLeft' + signStr, 'cameraRight' + signStr
 			];
 
@@ -259,15 +268,9 @@ const updateGamepadInput = () => {
 					let gameButtonsMap = gameButtons[actionStr as keyof typeof gameButtons];
 					if (gameButtonsMap && !gameButtonsMap.includes('axis' + i + signStr)) {
 						gameButtonsMap.push('axis' + i + signStr);
-						// Simulate keydown
 						window.dispatchEvent(new KeyboardEvent('keydown', { code: 'axis' + i + signStr }));
 					}
 				}
-			}
-		} else {
-			// Clear out the simulated button presses
-			for (let key in gameButtons) {
-				gameButtons[key as keyof typeof gameButtons] = gameButtons[key as keyof typeof gameButtons].filter(x => !x.startsWith('axis' + i));
 			}
 		}
 	}
@@ -307,6 +310,7 @@ export let normalizedJoystickHandlePosition: {x: number, y: number} = null;
 let movementAreaTouchIdentifier: number = null;
 let cameraAreaTouchIdentifier: number = null;
 let lastCameraTouch: Touch = null;
+let lastCameraTouchTime: number = 0;
 let joystickAsCameraTouches: Touch[] = [];
 
 export let useEnabled = false;
@@ -365,6 +369,7 @@ const setupTouchButton = (element: HTMLImageElement, button: keyof typeof gameBu
 const startCameraMovement = (touch: Touch) => {
 	cameraAreaTouchIdentifier = touch.identifier;
 	lastCameraTouch = touch;
+	lastCameraTouchTime = performance.now();
 };
 
 const startCameraMovementFromButton = (touch: Touch) => {
@@ -391,12 +396,16 @@ export const maybeShowTouchControls = () => {
 	touchInputContainer.style.display = Util.isTouchDevice? 'block' : 'none';
 };
 
-export const setTouchControlMode = (mode: 'normal' | 'replay') => {
+export const setTouchControlMode = (mode: 'normal' | 'replay' | 'editor') => {
 	if (mode === 'normal') {
 		[movementJoystick, jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = '');
 	} else if (mode === 'replay') {
 		// Hide everything but pause and replay buttons
 		[movementJoystick, jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = 'none');
+	} else if (mode === 'editor') {
+		// Keep movement but hide jump/use/blast
+		[jumpButton, useButton, blastButton, freeLookButton].forEach(x => x.style.display = 'none');
+		movementJoystick.style.display = '';
 	}
 };
 
@@ -405,7 +414,7 @@ movementAreaElement.addEventListener('touchstart', (e) => {
 	movementAreaTouchIdentifier = touch.identifier;
 
 	let x: number, y: number;
-	let joystickSize = StorageManager.data.settings.joystickSize;
+	let joystickSize = (StorageManager.data.settings as any).joystickSize || 250;
 	if (StorageManager.data.settings.joystickPosition === 0) {
 		// Fixed
 		x = StorageManager.data.settings.joystickLeftOffset + joystickSize/2;
@@ -434,8 +443,8 @@ movementAreaElement.addEventListener('touchmove', (e) => {
 });
 
 const updateJoystickHandlePosition = (touch: Touch) => {
-	let joystickSize = StorageManager.data.settings.joystickSize;
-	let joystickHandleSize = JOYSTICK_HANDLE_SIZE_FACTOR * StorageManager.data.settings.joystickSize;
+	let joystickSize = (StorageManager.data.settings as any).joystickSize || 250;
+	let joystickHandleSize = JOYSTICK_HANDLE_SIZE_FACTOR * ((StorageManager.data.settings as any).joystickSize || 250);
 	let innerRadius = (joystickSize - joystickHandleSize) / 2;
 
 	normalizedJoystickHandlePosition.x = Util.clamp((touch.clientX * SCALING_RATIO - joystickPosition.x) / innerRadius, -1, 1);
@@ -488,7 +497,7 @@ touchInputContainer.addEventListener('touchmove', (e) => {
 		let movementX = (touch.clientX - lastCameraTouch.clientX) * SCALING_RATIO;
 		let movementY = (touch.clientY - lastCameraTouch.clientY) * SCALING_RATIO;
 
-		let factor = Util.lerp(1 / 1500, 1 / 50, StorageManager.data.settings.mouseSensitivity) * ((joystickAsCameraTouches.length !== 0) ? StorageManager.data.settings.actionButtonAsJoystickMultiplier : 1);
+		let factor = Util.lerp(1 / 1500, 1 / 50, StorageManager.data.settings.mouseSensitivity) * ((joystickAsCameraTouches.length !== 0) ? ((StorageManager.data.settings as any)?.actionButtonAsJoystickMultiplier || 1) : 1);
 		let yFactor = (StorageManager.data.settings.invertMouse & 0b10)? -1 : 1;
 		let freeLook = StorageManager.data.settings.alwaysFreeLook || isPressed('freeLook');
 
@@ -498,3 +507,69 @@ touchInputContainer.addEventListener('touchmove', (e) => {
 		lastCameraTouch = touch;
 	}
 });
+
+window.addEventListener('dragover', (e) => {
+	e.preventDefault();
+});
+
+window.addEventListener('drop', async (e) => {
+	e.preventDefault();
+	if (!e.dataTransfer?.files.length) return;
+
+	let file = e.dataTransfer.files[0];
+
+	if (file.name.endsWith('.dts') || file.name.endsWith('.dif')) {
+		// Native Asset Drag & Drop Integration
+		let logicalPath = prompt("Enter the logical path for this asset (e.g. data/shapes/custom/my_shape.dts):", "data/custom/" + file.name);
+		if (!logicalPath) return;
+		await StorageManager.databasePut('keyvalue', file, 'custom_asset_' + logicalPath);
+		if (state && state.menu) state.menu.showAlertPopup("Custom Asset Loaded", "Successfully imported " + file.name + " as " + logicalPath);
+		return;
+	}
+
+	if (!file.name.endsWith('.mis')) {
+		console.warn("Only .mis, .dif, and .dts files are currently supported for drag and drop.");
+		return;
+	}
+
+	try {
+		let arrayBuffer = await file.arrayBuffer();
+		let misString = new TextDecoder().decode(arrayBuffer);
+
+		console.log("Successfully dropped mission file:", file.name);
+
+		// 1. Parse the dropped mis file
+		// (Avoid dynamic import to bypass TS1323)
+		let misFile = new MisParser(misString).parse();
+
+		// 2. Wrap it into a Mission object. We prefix the path to indicate it is a local drop.
+		let virtualPath = 'custom/dropped/' + file.name;
+		let newMission = Mission.fromMisFile(virtualPath, misFile);
+		newMission.id = Math.floor(Math.random() * 10000000); // Give it a fake ID
+
+		// 3. Inject it into MissionLibrary
+		MissionLibrary.allMissions.push(newMission);
+
+		// Add it to the correct custom array based on modification
+		if (state && state.modification) {
+			if (state.modification === 'gold') {
+				MissionLibrary.goldCustom.push(newMission);
+			} else if (state.modification === 'platinum') {
+				MissionLibrary.platinumCustom.push(newMission);
+			} else if (state.modification === 'ultra') {
+				MissionLibrary.ultraCustom.push(newMission);
+			}
+		} else {
+			MissionLibrary.goldCustom.push(newMission);
+		}
+
+		if (state && state.menu) {
+			state.menu.showAlertPopup("Custom Level Loaded", "Loaded " + file.name + " into the custom levels tab.");
+		}
+	} catch (err) {
+		console.error("Error reading dropped file:", err);
+	}
+});
+
+window.addEventListener('enableEditorTouchMode', () => { setTouchControlMode('editor'); maybeShowTouchControls(); touchInputContainer.style.zIndex = '1001'; });
+window.addEventListener('disableEditorTouchMode', () => { hideTouchControls(); });
