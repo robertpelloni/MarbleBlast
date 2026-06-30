@@ -3,6 +3,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import external_globals from 'rollup-plugin-external-globals';
 import externals from 'rollup-plugin-node-externals';
 import { string } from 'rollup-plugin-string';
+import svelte from 'rollup-plugin-svelte';
 
 export default (typescript) => [{
 	input: './src/ts/index.ts',
@@ -13,6 +14,7 @@ export default (typescript) => [{
 		resolve({
 			browser: true
 		}),
+		svelte({ include: 'src/**/*.svelte', emitCss: false }),
 		commonjs(),
 		typescript(),
 		external_globals({
