@@ -164,23 +164,23 @@ export class MbpOptionsScreen extends OptionsScreen {
 
 		this.addHeading(this.generalContainer, 'Touch Controls');
 
-		this.addDropdown(this.generalContainer, 'joystickPosition', 'Joystick Position', ['Fixed', 'Dynamic'], undefined, undefined, true);
+		this.addDropdown(this.generalContainer, 'joystickPosition', 'Joystick Position', ['Fixed', 'Dynamic'], undefined, undefined, true, undefined, "Fixed locks the joystick to a specific spot. Dynamic spawns the joystick wherever you touch.");
 
-		this.addSlider(this.generalContainer, 'joystickSize', 'Joystick Size', 100, 500, undefined, undefined, 1, (x) => (x|0).toString(), true);
+		this.addSlider(this.generalContainer, 'joystickSize', 'Joystick Size', 100, 500, undefined, undefined, 1, (x) => (x|0).toString(), true, "Controls the size of the virtual joystick on the screen.");
 
-		this.addSlider(this.generalContainer, 'joystickLeftOffset', 'Joystick Left Offset', 0, 300, undefined, undefined, 1, (x) => (x|0).toString(), true);
+		this.addSlider(this.generalContainer, 'joystickLeftOffset', 'Joystick Left Offset', 0, 300, undefined, undefined, 1, (x) => (x|0).toString(), true, "How far from the left edge of the screen the joystick is placed.");
 
-		this.addSlider(this.generalContainer, 'joystickVerticalPosition', 'Joystick Vertical Pos', 0, 1, undefined, undefined, undefined, (x) => Math.floor(100 * x) + '%', true);
+		this.addSlider(this.generalContainer, 'joystickVerticalPosition', 'Joystick Vertical Pos', 0, 1, undefined, undefined, undefined, (x) => Math.floor(100 * x) + '%', true, "The vertical placement of the joystick.");
 
-		this.addDropdown(this.generalContainer, 'actionButtonOrder', 'Button Order (⤾)', Util.getPermutations(['Blast', 'Jump', 'Use']).map(x => x.join(' - ')), undefined, undefined, true);
+		this.addDropdown(this.generalContainer, 'actionButtonOrder', 'Button Order (⤾)', Util.getPermutations(['Blast', 'Jump', 'Use']).map(x => x.join(' - ')), undefined, undefined, true, undefined, "Changes the arrangement of the action buttons.");
 
-		this.addSlider(this.generalContainer, 'actionButtonSize', 'Button Size', 50, 300, undefined, undefined, 1, (x) => (x|0).toString(), true);
+		this.addSlider(this.generalContainer, 'actionButtonSize', 'Button Size', 50, 300, undefined, undefined, 1, (x) => (x|0).toString(), true, "Changes the size of the action buttons.");
 
-		this.addSlider(this.generalContainer, 'actionButtonRightOffset', 'Button Right Offset', 0, 300, undefined, undefined, 1, (x) => (x|0).toString(), true);
+		this.addSlider(this.generalContainer, 'actionButtonRightOffset', 'Button Right Offset', 0, 300, undefined, undefined, 1, (x) => (x|0).toString(), true, "How far from the right edge the action buttons are placed.");
 
-		this.addSlider(this.generalContainer, 'actionButtonBottomOffset', 'Button Bottom Offset', 0, 300, undefined, undefined, 1, (x) => (x | 0).toString(), true);
+		this.addSlider(this.generalContainer, 'actionButtonBottomOffset', 'Button Bottom Offset', 0, 300, undefined, undefined, 1, (x) => (x | 0).toString(), true, "How far from the bottom edge the action buttons are placed.");
 
-		this.addSlider(this.generalContainer, 'actionButtonAsJoystickMultiplier', 'Button Sensitivity Fac', 0, 3, undefined, undefined, 0.1, (x) => (Math.floor(x * 10) / 10).toString(), true);
+		this.addSlider(this.generalContainer, 'actionButtonAsJoystickMultiplier', 'Button Sensitivity Fac', 0, 3, undefined, undefined, 0.1, (x) => (Math.floor(x * 10) / 10).toString(), true, "Adjusts camera sensitivity when swiping from action buttons.");
 
 		/* Hotkeys */
 
@@ -236,7 +236,7 @@ export class MbpOptionsScreen extends OptionsScreen {
 	}
 
 	/** Adds a dropdown element for a given option. */
-	addDropdown(container: HTMLDivElement, setting: keyof StorageData['settings'], label: string, choices: string[], boolean = false, onChange?: () => void, smallText = false, onInfoClick?: () => void) {
+	addDropdown(container: HTMLDivElement, setting: keyof StorageData['settings'], label: string, choices: string[], boolean = false, onChange?: () => void, smallText = false, onInfoClick?: () => void, tooltip?: string) {
 		const close = () => {
 			// Hide the dropdown
 			clickPreventer.classList.add('hidden');
@@ -252,6 +252,18 @@ export class MbpOptionsScreen extends OptionsScreen {
 
 		let p = document.createElement('p');
 		p.textContent = label + ':';
+		if (tooltip) {
+			p.title = tooltip;
+			p.style.cursor = 'help';
+		}
+		if (tooltip) {
+			p.title = tooltip;
+			p.style.cursor = 'help';
+		}
+		if (tooltip) {
+			p.title = tooltip;
+			p.style.cursor = 'help';
+		}
 
 		let button = document.createElement('img');
 		this.menu.setupButton(button, 'options/dropdown', () => {
@@ -317,7 +329,7 @@ export class MbpOptionsScreen extends OptionsScreen {
 	}
 
 	/** Adds a slider element for a given option. */
-	addSlider(container: HTMLDivElement, setting: keyof StorageData['settings'], label: string, min: number, max: number, onChange?: () => any, onDragStart?: () => any, step = 0, showValue?: (val: number) => string, smallText = false) {
+	addSlider(container: HTMLDivElement, setting: keyof StorageData['settings'], label: string, min: number, max: number, onChange?: () => any, onDragStart?: () => any, step = 0, showValue?: (val: number) => string, smallText = false, tooltip?: string) {
 		const updateThumb = () => {
 			let completion = ((StorageManager.data.settings[setting] as number) - min) / (max - min);
 			thumb.style.left = Math.floor(Util.lerp(SLIDER_KNOB_LEFT, SLIDER_KNOB_RIGHT, completion)) + 'px';

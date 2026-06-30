@@ -10,3 +10,6 @@
 ### Cross-Browser Edge Cases
 - **Audio (Safari):** Safari does not natively support `.ogg` format using standard WebAudio elements or decoding if not compiled with support. The custom `OggDec` decoder via WebAssembly is utilized when `Util.isSafari()` is triggered. AudioContext requires strict user interaction (click/touch) to resume from a suspended state.
 - **Gamepad API (Safari & Firefox):** The Web Gamepad API in Safari often requires the user to explicitly press a button on the controller before it registers in `navigator.getGamepads()`. Axis mappings can also differ on Apple hardware (M1/M2 Bluetooth stacks) vs Chromium on Windows.
+* Safari-specific handling for audio and gamepads has been added:
+  - AudioContext is resumed explicitly on user interaction (`touchstart`, `touchend`, `mousedown`, `keydown`) to fix Safari audio suspensions.
+  - Gamepad API checks for `navigator.webkitGetGamepads` and implements an explicit `gamepadconnected` listener, addressing Safari quirks where gamepads might require explicit button presses to register and poll correctly.

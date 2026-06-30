@@ -207,8 +207,15 @@ let mostRecentGamepad = 0;
 export const previousButtonState = [false, false, false, false, false, false, false, false, false, false, false, false, false, false];
 
 /** Update the input from the gamepad, if it is connected. */
+window.addEventListener("gamepadconnected", (e) => {
+	console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+		e.gamepad.index, e.gamepad.id,
+		e.gamepad.buttons.length, e.gamepad.axes.length);
+});
+
 const updateGamepadInput = () => {
-	let gamepads = 'getGamepads' in navigator ? [...navigator.getGamepads()].filter(x => x) : [];
+			let getGamepads = navigator.getGamepads || (navigator as any).webkitGetGamepads || ((): Gamepad[] => []);
+	let gamepads = [...getGamepads.call(navigator)].filter(x => x);
 	if (gamepads.length === 0) {
 		// No gamepad active
 		for (let key in gamepadAxes) gamepadAxes[key as keyof typeof gamepadAxes] = 0.0;
@@ -234,7 +241,13 @@ const updateGamepadInput = () => {
 	}
 
 	for (let i = 0; i < gamepads[mostRecentGamepad].axes.length && i < 4; i++) {
-		let axisVal = gamepads[mostRecentGamepad].axes[i];
+		let actualIndex = i;
+		if (Util.isSafari() && gamepads[mostRecentGamepad].axes.length > 4) {
+			// Specific workaround for Apple Gamepad API M1/M2 stack differences
+			if (i === 2) actualIndex = 3;
+			if (i === 3) actualIndex = 4;
+		}
+		let axisVal = gamepads[mostRecentGamepad].axes[actualIndex] || 0;
 		let deadzone = 0.15; // Increased deadzone slightly to prevent drifting digital inputs
 		let cleanVal = Math.abs(axisVal) < deadzone ? 0 : axisVal;
 

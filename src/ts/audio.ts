@@ -54,7 +54,25 @@ export class AudioManager {
 		this.musicGain.gain.value = 0;
 		this.musicGain.connect(this.masterGain);
 
-		if (!offline) this.updateVolumes();
+		if (!offline) {
+			this.updateVolumes();
+
+			// Safari requires explicit user interaction to resume AudioContext
+			if (this.context.state === 'suspended' && Util.isSafari()) {
+				const resumeContext = () => {
+					this.context.resume().then(() => {
+						if (this.context.state === 'running') {
+							['touchstart', 'touchend', 'mousedown', 'keydown'].forEach(e =>
+								window.removeEventListener(e, resumeContext)
+							);
+						}
+					});
+				};
+				['touchstart', 'touchend', 'mousedown', 'keydown'].forEach(e =>
+					window.addEventListener(e, resumeContext, { once: true })
+				);
+			}
+		}
 
 		window.onfocus = () => {
 			if (Util.isTouchDevice) this.masterGain.gain.value = 1;
