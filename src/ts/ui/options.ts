@@ -2,6 +2,8 @@ import { state } from "../state";
 import { StorageManager } from "../storage";
 import { Util } from "../util";
 import { Menu } from "./menu";
+// @ts-ignore
+import OptionsSettingsSvelte from "./svelte/OptionsSettings.svelte";
 
 export const buttonToDisplayNameMbg: Record<keyof typeof StorageManager.data.settings.gameButtonMapping, string> = {
 	up: 'Move Forward',
@@ -133,9 +135,21 @@ export abstract class OptionsScreen {
 
 	async init() {}
 
+	mountSveltePrototype() {
+		if (!(this as any).sveltePrototype && this.div) {
+			(this as any).sveltePrototype = new OptionsSettingsSvelte({
+				target: this.div,
+				props: {
+					StorageManager: StorageManager
+				}
+			});
+		}
+	}
+
 	show() {
 		this.div.classList.remove('hidden');
-	}
+			this.mountSveltePrototype();
+}
 
 	hide() {
 		this.div.classList.add('hidden');

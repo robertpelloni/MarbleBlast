@@ -256,14 +256,6 @@ export class MbpOptionsScreen extends OptionsScreen {
 			p.title = tooltip;
 			p.style.cursor = 'help';
 		}
-		if (tooltip) {
-			p.title = tooltip;
-			p.style.cursor = 'help';
-		}
-		if (tooltip) {
-			p.title = tooltip;
-			p.style.cursor = 'help';
-		}
 
 		let button = document.createElement('img');
 		this.menu.setupButton(button, 'options/dropdown', () => {
