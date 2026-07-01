@@ -45,8 +45,8 @@ export class LevelEditor {
 		// Event listener logic moved to Svelte component and handleRaycast
 	}
 
-	handleRaycast(e: MouseEvent) {
-		if (!state.level || this.div.classList.contains('hidden')) return;
+	handleRaycast(e: MouseEvent | undefined) {
+		if (!state.level || this.div.classList.contains('hidden') || !e) return;
 
 		let pointer = {
 			x: (e.clientX / window.innerWidth) * 2 - 1,

@@ -154,7 +154,7 @@
   }
 </style>
 
-<div class="editor-container" on:click={() => dispatch('clickRaycast')} role="button" tabindex="0" on:keydown={(e) => { if(e.key === 'Enter') dispatch('clickRaycast') }}>
+<div class="editor-container" on:click={(e) => dispatch('clickRaycast', e)} role="button" tabindex="0" on:keydown={(e) => { if(e.key === 'Enter') dispatch('clickRaycast', e) }}>
   <h1 class="header">Level Editor (WIP)</h1>
 
   <img src="./assets/ui/play/prev.png" alt="Home" class="home-btn" on:click={hideEditor} role="button" tabindex="0" on:keydown={(e) => { if(e.key === 'Enter') hideEditor() }} />
