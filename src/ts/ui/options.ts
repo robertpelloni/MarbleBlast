@@ -39,6 +39,8 @@ export const buttonToDisplayNameMbp: Record<keyof typeof StorageManager.data.set
 export abstract class OptionsScreen {
 	menu: Menu;
 	div: HTMLDivElement;
+	keyListener?: (e: KeyboardEvent) => void;
+	mouseListener?: (e: MouseEvent) => void;
 	homeButton: HTMLImageElement;
 	homeButtonSrc: string;
 
@@ -119,6 +121,18 @@ export abstract class OptionsScreen {
 		});
 	}
 
+	handleRebindInput(value: string) {
+		if (!this.currentlyRebinding || this.currentlyRebindingGamepad || this.rebindValue || (this as any).svelteComponent?.rebindState?.hasConflict) return;
+
+		if (value === 'Escape') {
+			this.currentlyRebinding = null;
+			this.updateRebindState(false, false, '', '');
+			return;
+		}
+
+		this.setKeybinding(this.currentlyRebinding, value);
+	}
+
 	updateRebindState(isRebinding: boolean, hasConflict: boolean, rebindText: string, conflictText: string) {
 		if ((this as any).svelteComponent) {
 			(this as any).svelteComponent.$set({
@@ -140,10 +154,19 @@ export abstract class OptionsScreen {
 
 	show() {
 		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: true });
+
+		this.keyListener = (e: KeyboardEvent) => this.handleRebindInput(e.code);
+		this.mouseListener = (e: MouseEvent) => this.handleRebindInput('mouse' + e.button);
+
+		window.addEventListener('keydown', this.keyListener);
+		window.addEventListener('mousedown', this.mouseListener);
 	}
 
 	hide() {
 		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: false });
+
+		if (this.keyListener) window.removeEventListener('keydown', this.keyListener);
+		if (this.mouseListener) window.removeEventListener('mousedown', this.mouseListener);
 	}
 
 	refreshKeybindings() {
