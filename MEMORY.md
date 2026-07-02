@@ -13,3 +13,5 @@
 * Safari-specific handling for audio and gamepads has been added:
   - AudioContext is resumed explicitly on user interaction (`touchstart`, `touchend`, `mousedown`, `keydown`) to fix Safari audio suspensions.
   - Gamepad API checks for `navigator.webkitGetGamepads` and implements an explicit `gamepadconnected` listener, addressing Safari quirks where gamepads might require explicit button presses to register and poll correctly.
+
+Svelte Migration Status: Complete. All major `src/ts/ui` TS files (Level Select, Help, Finish, Pause Jukebox, and Options overrides) have been bridged to .svelte components relying on reactive data-binding.
