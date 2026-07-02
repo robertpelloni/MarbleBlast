@@ -1,5 +1,7 @@
 import { ResourceManager } from "../resources";
 import { HelpScreen } from "./help";
+// @ts-ignore
+import HelpUISvelte from "./svelte/HelpUI.svelte";
 
 /** The page files to load and show, ordered. */
 const PAGES = ['webport', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22'];
@@ -9,6 +11,8 @@ const ANCHOR_REGEX = /&lt;a:(.+?)&gt;(.+?)&lt;\/a&gt;/g; // Looks a bit shitty '
 export class MbpHelpScreen extends HelpScreen {
 	pagePicker = document.querySelector('#mbp-help-picker');
 	pageElements: HTMLDivElement[] = [];
+	pagesData: {title: string, html: string}[] = [];
+	selectedIndex = 0;
 
 	initProperties() {
 		this.div = document.querySelector('#mbp-help');
@@ -30,30 +34,28 @@ export class MbpHelpScreen extends HelpScreen {
 
 		// For each text, create the necessary elements
 		for (let text of texts) {
-			let heading = text.slice(0, text.indexOf('\n')); // The title of each page is its first line
-			let selector = document.createElement('div');
-			selector.textContent = heading;
-			selector.addEventListener('mousedown', () => this.selectPage(texts.indexOf(text)));
-			this.pagePicker.appendChild(selector);
-
-			let pageElement = document.createElement('div');
-			pageElement.classList.add('_page', 'hidden');
-			pageElement.innerHTML = this.generatePageHtml(text);
-
-			this.pageElements.push(pageElement);
-			this.div.appendChild(pageElement);
+			let heading = text.slice(0, text.indexOf('\n'));
+			let html = this.generatePageHtml(text);
+			this.pagesData.push({ title: heading, html });
 		}
 
-		this.selectPage(0);
+		(this.pagePicker as HTMLElement).style.display = 'none'; // Hide legacy UI
+
+		(this as any).svelteComponent = new HelpUISvelte({
+			target: this.div,
+			props: {
+				pages: this.pagesData,
+				selectedIndex: 0,
+				onSelectPage: (i: number) => this.selectPage(i)
+			}
+		});
 	}
 
 	selectPage(index: number) {
-		for (let child of this.pagePicker.children) child.classList.remove('selected');
-		this.pagePicker.children[index].classList.add('selected');
-
-		for (let page of this.pageElements) page.classList.add('hidden');
-		this.pageElements[index].classList.remove('hidden');
-		this.pageElements[index].scrollTop = 0;
+		this.selectedIndex = index;
+		if ((this as any).svelteComponent) {
+			(this as any).svelteComponent.$set({ selectedIndex: index });
+		}
 	}
 
 	/** Turns a subset of TorqueML into HTML. */

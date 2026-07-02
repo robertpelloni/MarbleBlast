@@ -22,9 +22,11 @@ export abstract class HelpScreen {
 
 	show() {
 		this.div.classList.remove('hidden');
+		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: true });
 	}
 
 	hide() {
 		this.div.classList.add('hidden');
+		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: false });
 	}
 }
