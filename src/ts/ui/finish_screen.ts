@@ -7,6 +7,8 @@ import { state } from "../state";
 import { BestTimes, StorageManager } from "../storage";
 import { Util } from "../util";
 import { Menu } from "./menu";
+// @ts-ignore
+import FinishBestTimesUISvelte from "./svelte/FinishBestTimesUI.svelte";
 
 export abstract class FinishScreen {
 	div: HTMLDivElement;
@@ -107,18 +109,12 @@ export abstract class FinishScreen {
 		});
 	}
 
-	async init() {
-		for (let i = 0; i < this.bestTimeCount; i++) {
-			let element = this.createBestTimeElement();
-			this.bestTimeContainer.appendChild(element);
-		}
-	}
+	async init() { }
 
 	abstract initProperties(): void;
 	abstract showMessage(type: 'failed' | 'qualified' | 'gold' | 'ultimate'): void;
 	abstract updateTimeElements(elapsedTime: number, bonusTime: number, failedToQualify: boolean): void;
-	abstract createBestTimeElement(): HTMLDivElement;
-	abstract updateBestTimeElement(element: HTMLDivElement, score: BestTimes[number], rank: number): void;
+
 	abstract generateNameEntryText(place: number): string;
 
 	show() {
@@ -176,8 +172,25 @@ export abstract class FinishScreen {
 	/** Updates the best times. */
 	drawBestTimes() {
 		let bestTimes = StorageManager.getBestTimesForMission(state.level.mission.path, this.bestTimeCount, this.scorePlaceholderName);
-		for (let i = 0; i < this.bestTimeCount; i++) {
-			this.updateBestTimeElement(this.bestTimeContainer.children[i] as HTMLDivElement, bestTimes[i], i+1);
+
+		if (!(this as any).svelteBestTimes) {
+			this.bestTimeContainer.innerHTML = '';
+			(this as any).svelteBestTimes = new FinishBestTimesUISvelte({
+				target: this.bestTimeContainer,
+				props: {
+					scores: bestTimes,
+					modification: state.modification,
+					goldTime: state.level.mission.goldTime,
+					ultimateTime: state.level.mission.ultimateTime
+				}
+			});
+		} else {
+			(this as any).svelteBestTimes.$set({
+				scores: bestTimes,
+				modification: state.modification,
+				goldTime: state.level.mission.goldTime,
+				ultimateTime: state.level.mission.ultimateTime
+			});
 		}
 	}
 

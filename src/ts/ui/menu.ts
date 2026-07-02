@@ -13,6 +13,8 @@ import { SCALING_RATIO, setEnterFullscreenButtonVisibility } from "./misc";
 import { OptionsScreen } from "./options";
 import { PauseScreen } from "./pause_screen";
 import { LevelEditor } from "./editor";
+// @ts-ignore
+import MenuPopupsSvelte from "./svelte/MenuPopups.svelte";
 
 export abstract class Menu {
 	home: HomeScreen;
@@ -222,118 +224,73 @@ export abstract class Menu {
 		this.gameUiDiv.classList.add('hidden');
 	}
 
-	createAlertBase(heading: string, body: string, custom?: HTMLDivElement) {
-		let div = document.createElement('div');
-		div.classList.add('hidden');
-		div.classList.add('popup');
-		div.classList.add((state.modification === 'gold')? 'mbg' : 'mbp');
-
-		let clickPreventer = document.createElement('div');
-
-		let img = document.createElement('img');
-		img.onload = () => {
-			div.style.width = ((state.modification === 'gold')? 400 : img.width) + 'px';
-			div.style.height = ((state.modification === 'gold')? 250 : img.height) + 'px';
-			img.style.width = div.style.width;
-			img.style.height = div.style.height;
-			div.classList.remove('hidden');
-		};
-		img.src = this.popupBackgroundSrc;
-
-		let headingElem = document.createElement('p');
-		headingElem.classList.add('_heading');
-		headingElem.innerHTML = heading;
-
-		let bodyElem = document.createElement('p');
-		bodyElem.classList.add('_body');
-		bodyElem.innerHTML = body;
-		bodyElem.innerHTML = bodyElem.innerHTML.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>');
-
-		div.append(clickPreventer, img, headingElem, bodyElem);
-		if (custom) {
-			custom.classList.add('_custom');
-			// Timeout to let text get layouted (couldn't get it to work otherwise)
-			setTimeout(() => {
-				custom.style.top = 44 + bodyElem.clientHeight + 'px';
-				div.append(custom);
-			});
-		}
-
-		return div;
-	}
+	createAlertBase(heading: string, body: string, custom?: HTMLDivElement): any { return null; }
 
 	/** Shows a customizable alert pop-up on screen that the user can dismiss. */
 	showAlertPopup(heading: string, body: string, custom?: HTMLDivElement) {
 		return new Promise<void>(resolve => {
-			let div = this.createAlertBase(heading, body, custom);
+			if (!(this as any).sveltePopups) { resolve(); return; }
 
-			let okayButton = document.createElement('img');
-			okayButton.classList.add('_okay');
-			this.setupButton(okayButton, this.popupOkaySrc, () => {
-				this.popupContainer.removeChild(div);
-				if (this.popupContainer.children.length === 0) this.popupContainer.style.display = 'none';
+			const handler1 = (e: KeyboardEvent) => {
+				if (e.key === 'Escape') close();
+			};
+
+			const close = () => {
+				(this as any).sveltePopups.$set({ alertState: { visible: false } });
 				window.removeEventListener('keydown', handler1);
-				window.removeEventListener('keyup', handler2);
-
 				resolve();
-			});
+			};
 
-			let handler1 = (e: KeyboardEvent) => {
-				if (e.key === 'Escape') okayButton.src = this.uiAssetPath + this.popupOkaySrc + '_d.png';
-			};
-			let handler2 = (e: KeyboardEvent) => {
-				if (e.key === 'Escape') okayButton.click();
-			};
 			window.addEventListener('keydown', handler1);
-			window.addEventListener('keyup', handler2);
 
-			div.append(okayButton);
-
-			this.popupContainer.append(div);
-			this.popupContainer.style.display = '';
+			(this as any).sveltePopups.$set({
+				alertState: {
+					visible: true,
+					heading,
+					body,
+					type: 'alert',
+					modification: state.modification,
+					popupBackgroundSrc: this.uiAssetPath + this.popupBackgroundSrc,
+					popupOkaySrc: this.uiAssetPath + this.popupOkaySrc + '_n.png',
+					customHtml: custom,
+					onConfirm: close
+				}
+			});
 		});
 	}
 
 	/** Shows a customizable confirm (yes/no) pop-up on screen. */
 	showConfirmPopup(heading: string, body: string, custom?: HTMLDivElement) {
 		return new Promise<boolean>(resolve => {
-			let div = this.createAlertBase(heading, body, custom);
+			if (!(this as any).sveltePopups) { resolve(false); return; }
 
-			let noButton = document.createElement('img');
-			noButton.classList.add('_no');
-			this.setupButton(noButton, this.popupNoSrc, () => {
-				this.popupContainer.removeChild(div);
-				if (this.popupContainer.children.length === 0) this.popupContainer.style.display = 'none';
-				window.removeEventListener('keydown', handler1);
-				window.removeEventListener('keyup', handler2);
-
-				resolve(false);
-			});
-
-			let yesButton = document.createElement('img');
-			yesButton.classList.add('_yes');
-			this.setupButton(yesButton, this.popupYesSrc, () => {
-				this.popupContainer.removeChild(div);
-				if (this.popupContainer.children.length === 0) this.popupContainer.style.display = 'none';
-				window.removeEventListener('keydown', handler1);
-				window.removeEventListener('keyup', handler2);
-
-				resolve(true);
-			});
-
-			let handler1 = (e: KeyboardEvent) => {
-				if (e.key === 'Escape') noButton.src = this.uiAssetPath + this.popupNoSrc + '_d.png';
+			const handler1 = (e: KeyboardEvent) => {
+				if (e.key === 'Escape') close(false);
 			};
-			let handler2 = (e: KeyboardEvent) => {
-				if (e.key === 'Escape') noButton.click();
+
+			const close = (result: boolean) => {
+				(this as any).sveltePopups.$set({ alertState: { visible: false } });
+				window.removeEventListener('keydown', handler1);
+				resolve(result);
 			};
+
 			window.addEventListener('keydown', handler1);
-			window.addEventListener('keyup', handler2);
 
-			div.append(noButton, yesButton);
-
-			this.popupContainer.append(div);
-			this.popupContainer.style.display = '';
+			(this as any).sveltePopups.$set({
+				alertState: {
+					visible: true,
+					heading,
+					body,
+					type: 'confirm',
+					modification: state.modification,
+					popupBackgroundSrc: this.uiAssetPath + this.popupBackgroundSrc,
+					popupYesSrc: this.uiAssetPath + this.popupYesSrc + '_n.png',
+					popupNoSrc: this.uiAssetPath + this.popupNoSrc + '_n.png',
+					customHtml: custom,
+					onConfirm: () => close(true),
+					onCancel: () => close(false)
+				}
+			});
 		});
 	}
 
