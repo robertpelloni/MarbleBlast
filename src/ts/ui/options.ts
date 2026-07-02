@@ -79,6 +79,16 @@ export abstract class OptionsScreen {
 				changeKeybinding: (key: string, isGamepad: boolean) => this.changeKeybinding(key as any, isGamepad),
 				formatKeybinding: (key: string) => this.formatKeybinding(key as any),
 				formatGamepadKeybindingForButton: (key: string) => this.formatGamepadKeybindingForButton(key as any),
+				onPickMarbleTexture: async () => {
+					await this.showMarbleTexturePicker();
+					this.updateMarbleTextureState();
+				},
+				hasMarbleTexture: false,
+				onClearMarbleTexture: () => {
+					StorageManager.databaseDelete('keyvalue', 'marbleTexture');
+					this.updateMarbleTextureState();
+				},
+				onRefresh: () => location.reload(),
 
 				rebindState: {
 					isRebinding: false,
@@ -133,6 +143,13 @@ export abstract class OptionsScreen {
 		this.setKeybinding(this.currentlyRebinding, value);
 	}
 
+	async updateMarbleTextureState() {
+		if ((this as any).svelteComponent) {
+			let count = await StorageManager.databaseCount('keyvalue', 'marbleTexture');
+			(this as any).svelteComponent.$set({ hasMarbleTexture: count > 0 });
+		}
+	}
+
 	updateRebindState(isRebinding: boolean, hasConflict: boolean, rebindText: string, conflictText: string) {
 		if ((this as any).svelteComponent) {
 			(this as any).svelteComponent.$set({
@@ -153,6 +170,7 @@ export abstract class OptionsScreen {
 	async init() {}
 
 	show() {
+		this.updateMarbleTextureState();
 		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: true });
 
 		this.keyListener = (e: KeyboardEvent) => this.handleRebindInput(e.code);

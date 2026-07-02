@@ -64,6 +64,11 @@
 
   export let confirmRebind;
   export let declineRebind;
+  export let onPickMarbleTexture;
+  export let hasMarbleTexture = false;
+  export let onClearMarbleTexture;
+  export let onRefresh;
+
 
   export let visible = false;
 </script>
@@ -210,6 +215,45 @@
     <div class="tab" class:active={activeTab === 'controls'} on:click={() => activeTab = 'controls'}    on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'controls' }}>Controls</div>
     {#if isMbp || settings.touchControls}
       <div class="tab" class:active={activeTab === 'touch'} on:click={() => activeTab = 'touch'}    on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'touch' }}>Touch</div>
+
+      <div class="row">
+        <div class="label">Button Order</div>
+        <div class="control">
+          <select value={settings.actionButtonOrder} on:change={(e) => updateSetting('actionButtonOrder', parseInt(e.currentTarget.value))}>
+            <option value="0">Blast - Jump - Use</option>
+            <option value="1">Blast - Use - Jump</option>
+            <option value="2">Jump - Blast - Use</option>
+            <option value="3">Jump - Use - Blast</option>
+            <option value="4">Use - Blast - Jump</option>
+            <option value="5">Use - Jump - Blast</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Button Size</div>
+        <div class="control">
+          <input type="range" min="50" max="300" value={settings.actionButtonSize || 100} on:input={(e) => updateSetting('actionButtonSize', parseFloat(e.currentTarget.value))} />
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Button Right Offset</div>
+        <div class="control">
+          <input type="range" min="0" max="300" value={settings.actionButtonRightOffset || 15} on:input={(e) => updateSetting('actionButtonRightOffset', parseFloat(e.currentTarget.value))} />
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Button Bottom Offset</div>
+        <div class="control">
+          <input type="range" min="0" max="300" value={settings.actionButtonBottomOffset || 15} on:input={(e) => updateSetting('actionButtonBottomOffset', parseFloat(e.currentTarget.value))} />
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Button Sens. Fac.</div>
+        <div class="control">
+          <input type="range" min="0" max="3" step="0.1" value={settings.actionButtonAsJoystickMultiplier || 0} on:input={(e) => updateSetting('actionButtonAsJoystickMultiplier', parseFloat(e.currentTarget.value))} />
+        </div>
+      </div>
+
     {/if}
   </div>
 
@@ -229,17 +273,71 @@
           <span>{settings.resolutionScale || 1}</span>
         </div>
       </div>
+
       {#if isMbp}
         <div class="row">
-          <div class="label">Fancy Shaders</div>
+          <div class="label">Reflective Marble</div>
           <div class="control">
-            <input type="checkbox" checked={settings.fancyShaders} on:change={(e) => updateSetting('fancyShaders', e.currentTarget.checked)} />
+            <select value={settings.marbleReflectivity} on:change={(e) => updateSetting('marbleReflectivity', parseInt(e.currentTarget.value))}>
+              <option value="0">Contextual</option>
+              <option value="1">Disabled</option>
+              <option value="2">Enabled</option>
+            </select>
           </div>
         </div>
         <div class="row">
-          <div class="label">Reflections</div>
+          <div class="label">Pixel Ratio</div>
           <div class="control">
-            <input type="checkbox" checked={settings.reflections} on:change={(e) => updateSetting('reflections', e.currentTarget.checked)} />
+            <select value={settings.pixelRatio} on:change={(e) => updateSetting('pixelRatio', parseInt(e.currentTarget.value))}>
+              <option value="0">Max 0.5</option>
+              <option value="1">Max 1.0</option>
+              <option value="2">Max 1.5</option>
+              <option value="3">Max 2.0</option>
+              <option value="4">Max ∞</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">Low-latency mode</div>
+          <div class="control">
+            <input type="checkbox" checked={settings.canvasDesynchronized} on:change={(e) => { updateSetting('canvasDesynchronized', e.currentTarget.checked); onRefresh(); }} />
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">Frame Rate Cap</div>
+          <div class="control">
+            <select value={settings.frameRateCap} on:change={(e) => updateSetting('frameRateCap', parseInt(e.currentTarget.value))}>
+              <option value="0">30</option>
+              <option value="1">60</option>
+              <option value="2">90</option>
+              <option value="3">120</option>
+              <option value="4">144</option>
+              <option value="5">165</option>
+              <option value="6">240</option>
+              <option value="7">360</option>
+              <option value="8">Unlimited</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">Show Frame Rate</div>
+          <div class="control">
+            <input type="checkbox" checked={settings.showFrameRate} on:change={(e) => updateSetting('showFrameRate', e.currentTarget.checked)} />
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">Thousandths</div>
+          <div class="control">
+            <input type="checkbox" checked={settings.showThousandths} on:change={(e) => updateSetting('showThousandths', e.currentTarget.checked)} />
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">Custom Marble</div>
+          <div class="control">
+            {#if hasMarbleTexture}
+              <button on:click={onClearMarbleTexture} style="background: darkred; margin-right: 5px;">Clear</button>
+            {/if}
+            <button on:click={onPickMarbleTexture}>Select File</button>
           </div>
         </div>
       {/if}
@@ -268,6 +366,30 @@
           <span>{Math.floor((settings.mouseSensitivity ?? 0.25) * 100)}%</span>
         </div>
       </div>
+
+      <div class="row">
+        <div class="label">Always Free-Look</div>
+        <div class="control">
+          <input type="checkbox" checked={settings.alwaysFreeLook} on:change={(e) => updateSetting('alwaysFreeLook', e.currentTarget.checked)} />
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Keyboard Speed</div>
+        <div class="control">
+          <input type="range" min="0" max="1" step="0.01" value={settings.keyboardSensitivity ?? 1.0} on:input={(e) => updateSetting('keyboardSensitivity', parseFloat(e.currentTarget.value))} />
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Input Type</div>
+        <div class="control">
+          <select value={settings.inputType} on:change={(e) => { updateSetting('inputType', parseInt(e.currentTarget.value)); onRefresh(); }}>
+            <option value="0">Auto</option>
+            <option value="1">Keyboard + Mouse</option>
+            <option value="2">Touch</option>
+          </select>
+        </div>
+      </div>
+
       <div class="row">
         <div class="label">Invert Y-Axis</div>
         <div class="control">
