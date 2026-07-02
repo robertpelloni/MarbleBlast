@@ -49,7 +49,8 @@
     { label: 'Look Down', key: 'lookDown' }
   ];
 
-  $: bindings = modification === 'gold' ? mbgBindings : mbpBindings;
+  $: currentSettings = settings;
+  $: bindings = modification === 'gold' ? mbgBindings.map(b => ({...b, trigger: currentSettings})) : mbpBindings.map(b => ({...b, trigger: currentSettings}));
   $: isMbp = modification === 'platinum';
 
 
