@@ -15,13 +15,13 @@ export class LevelEditor {
 	constructor(menu: Menu) {
 		this.menu = menu;
 
-		this.div = document.createElement('div');
-		this.div.id = 'level-editor-container';
-		this.div.classList.add('hidden');
-		document.body.appendChild(this.div);
+
+
+
+
 
 		(this as any).svelteComponent = new LevelEditorSvelte({
-			target: this.div,
+			target: document.body,
 			props: {
 				StorageManager,
 				state,
@@ -46,7 +46,7 @@ export class LevelEditor {
 	}
 
 	handleRaycast(e: MouseEvent | undefined) {
-		if (!state.level || this.div.classList.contains('hidden') || !e) return;
+		if (!state.level || !(this as any).svelteComponent?.visible || !e) return;
 
 		let pointer = {
 			x: (e.clientX / window.innerWidth) * 2 - 1,
@@ -119,7 +119,7 @@ export class LevelEditor {
 	}
 
 	show() {
-		this.div.classList.remove('hidden');
+		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: true });
 		// In a real implementation this would invoke input.setTouchControlMode directly.
 		// Since we cannot use dynamic imports in this es module build, we use the global window event or a state hook.
 		if (state.menu && state.menu.hud) {
@@ -129,7 +129,7 @@ export class LevelEditor {
 	}
 
 	hide() {
-		this.div.classList.add('hidden');
+		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: false });
 		window.dispatchEvent(new CustomEvent('disableEditorTouchMode'));
 	}
 

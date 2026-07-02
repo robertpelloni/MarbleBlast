@@ -52,6 +52,20 @@
   $: bindings = modification === 'gold' ? mbgBindings : mbpBindings;
   $: isMbp = modification === 'platinum';
 
+
+  export let rebindState = {
+    isRebinding: false,
+    hasConflict: false,
+    rebindText: '',
+    conflictText: '',
+    warningEnding: 'Rebind anyway?'
+  };
+
+
+  export let confirmRebind;
+  export let declineRebind;
+
+  export let visible = false;
 </script>
 
 <style>
@@ -156,19 +170,46 @@
     left: 20px;
     cursor: pointer;
   }
+
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+  }
+
+  .confirm-buttons {
+    display: flex;
+    gap: 40px;
+    margin-top: 20px;
+  }
+
+  .confirm-buttons img {
+    cursor: pointer;
+  }
 </style>
 
+{#if visible}
 <div class="options-container" role="dialog" aria-modal="true">
   <h2>Options</h2>
 
   <img src="./assets/ui/play/prev.png" alt="Home" class="home-btn" on:click={hideOptions} />
 
   <div class="tabs">
-    <div class="tab" class:active={activeTab === 'graphics'} on:click={() => activeTab = 'graphics'} role="button" tabindex="0" on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'graphics' }}>Graphics</div>
-    <div class="tab" class:active={activeTab === 'audio'} on:click={() => activeTab = 'audio'} role="button" tabindex="0" on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'audio' }}>Audio</div>
-    <div class="tab" class:active={activeTab === 'controls'} on:click={() => activeTab = 'controls'} role="button" tabindex="0" on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'controls' }}>Controls</div>
+    <div class="tab" class:active={activeTab === 'graphics'} on:click={() => activeTab = 'graphics'}    on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'graphics' }}>Graphics</div>
+    <div class="tab" class:active={activeTab === 'audio'} on:click={() => activeTab = 'audio'}    on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'audio' }}>Audio</div>
+    <div class="tab" class:active={activeTab === 'controls'} on:click={() => activeTab = 'controls'}    on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'controls' }}>Controls</div>
     {#if isMbp || settings.touchControls}
-      <div class="tab" class:active={activeTab === 'touch'} on:click={() => activeTab = 'touch'} role="button" tabindex="0" on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'touch' }}>Touch</div>
+      <div class="tab" class:active={activeTab === 'touch'} on:click={() => activeTab = 'touch'}    on:keydown={(e) => { if (e.key === 'Enter') activeTab = 'touch' }}>Touch</div>
     {/if}
   </div>
 
@@ -277,3 +318,25 @@
     {/if}
   </div>
 </div>
+
+
+{#if rebindState.isRebinding && !rebindState.hasConflict}
+  <div class="modal-overlay">
+    <h2>{rebindState.rebindText}</h2>
+    <p>Press ESC to cancel.</p>
+  </div>
+{/if}
+
+{#if rebindState.hasConflict}
+  <div class="modal-overlay">
+    <h2>{@html rebindState.conflictText}</h2>
+    <div class="confirm-buttons">
+      <img src="./assets/ui/options/yes.png" alt="Yes"    on:click={confirmRebind} on:keydown={(e) => { if(e.key === 'Enter') confirmRebind() }} />
+      <img src="./assets/ui/options/no.png" alt="No"    on:click={declineRebind} on:keydown={(e) => { if(e.key === 'Enter') declineRebind() }} />
+    </div>
+  </div>
+{/if}
+
+
+
+{/if}

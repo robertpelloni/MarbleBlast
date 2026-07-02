@@ -109,6 +109,8 @@
     URL.revokeObjectURL(url);
   }
 
+
+  export let visible = false;
 </script>
 
 <style>
@@ -154,10 +156,11 @@
   }
 </style>
 
-<div class="editor-container" on:click={(e) => dispatch('clickRaycast', e)} role="button" tabindex="0" on:keydown={(e) => { if(e.key === 'Enter') dispatch('clickRaycast', e) }}>
+{#if visible}
+<div class="editor-container" on:click={(e) => dispatch('clickRaycast', e)}    on:keydown={(e) => { if(e.key === 'Enter') dispatch('clickRaycast', e) }}>
   <h1 class="header">Level Editor (WIP)</h1>
 
-  <img src="./assets/ui/play/prev.png" alt="Home" class="home-btn" on:click={hideEditor} role="button" tabindex="0" on:keydown={(e) => { if(e.key === 'Enter') hideEditor() }} />
+  <img src="./assets/ui/play/prev.png" alt="Home" class="home-btn" on:click={hideEditor}    on:keydown={(e) => { if(e.key === 'Enter') hideEditor() }} />
 
   <div class="tools-panel" on:click|stopPropagation role="region" tabindex="-1">
     <h3>Saved Levels</h3>
@@ -177,3 +180,5 @@
     <button on:click={exportMis}>Export .mis</button>
   </div>
 </div>
+
+{/if}
