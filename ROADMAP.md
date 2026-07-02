@@ -21,4 +21,4 @@
 - Project architecture documentation has been properly generated (AGENTS, ROADMAP, IDEAS, MEMORY, CHANGELOG, etc.).
 
 ## Structural Refactor Plans
-- Transition the heavily imperative HTML overlay system (`src/ts/ui`) to a reactive framework like Svelte to eliminate the technical debt associated with raw DOM manipulation and manual state sync logic in the Options and Editor classes.
+- [x] Transition the heavily imperative HTML overlay system (`src/ts/ui`) to a reactive framework like Svelte to eliminate the technical debt associated with raw DOM manipulation and manual state sync logic in the Options, Editor, HUD, Pause, Help, LevelSelect, and Finish screens.
