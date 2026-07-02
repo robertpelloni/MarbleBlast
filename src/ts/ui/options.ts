@@ -3,7 +3,7 @@ import { StorageManager } from "../storage";
 import { Util } from "../util";
 import { Menu } from "./menu";
 // @ts-ignore
-import OptionsSettingsSvelte from "./svelte/OptionsSettings.svelte";
+import OptionsUI from "./svelte/OptionsUI.svelte";
 
 export const buttonToDisplayNameMbg: Record<keyof typeof StorageManager.data.settings.gameButtonMapping, string> = {
 	up: 'Move Forward',
@@ -59,103 +59,129 @@ export abstract class OptionsScreen {
 
 	constructor(menu: Menu) {
 		this.menu = menu;
-		this.initProperties();
 
-		menu.setupButton(this.homeButton, this.homeButtonSrc, () => {
-			this.hide();
-			menu.home.show();
-		}, undefined, undefined, state.modification === 'gold');
+		this.div = document.createElement('div');
+		this.div.id = 'options-screen-container';
+		this.div.classList.add('hidden');
+		document.body.appendChild(this.div);
 
-		window.addEventListener('keydown', (e) => {
-			if (!this.currentlyRebinding || this.rebindValue) return;
+		// The rebind dialogs are complex state machines we keep in DOM for now
+		this.rebindDialog = document.createElement('div');
+		this.rebindDialog.classList.add('hidden');
+		this.rebindDialog.id = 'rebind-dialog';
 
-			if (e.code === 'Escape') {
-				// Exits keybinding without changing anything
-				this.currentlyRebinding = null;
-				this.rebindDialog.classList.add('hidden');
-			} else {
-				this.setKeybinding(this.currentlyRebinding, e.code);
+		let rebindOverlay = document.createElement('div');
+		rebindOverlay.style.position = 'absolute';
+		rebindOverlay.style.top = '0';
+		rebindOverlay.style.left = '0';
+		rebindOverlay.style.width = '100%';
+		rebindOverlay.style.height = '100%';
+		rebindOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+		rebindOverlay.style.zIndex = '2000';
+		this.rebindDialog.appendChild(rebindOverlay);
+
+		let rebindText = document.createElement('h2');
+		rebindText.style.position = 'absolute';
+		rebindText.style.top = '50%';
+		rebindText.style.left = '50%';
+		rebindText.style.transform = 'translate(-50%, -50%)';
+		rebindText.style.color = 'white';
+		rebindText.style.zIndex = '2001';
+		this.rebindDialog.appendChild(rebindText);
+
+		let rebindCancelText = document.createElement('p');
+		rebindCancelText.innerHTML = "Press ESC to cancel.";
+		rebindCancelText.style.position = 'absolute';
+		rebindCancelText.style.top = '60%';
+		rebindCancelText.style.left = '50%';
+		rebindCancelText.style.transform = 'translate(-50%, -50%)';
+		rebindCancelText.style.color = 'white';
+		rebindCancelText.style.zIndex = '2001';
+		this.rebindDialog.appendChild(rebindCancelText);
+
+		document.body.appendChild(this.rebindDialog);
+
+		this.rebindConfirm = document.createElement('div');
+		this.rebindConfirm.classList.add('hidden');
+		this.rebindConfirm.id = 'rebind-confirm-dialog';
+
+		let rebindConfirmOverlay = document.createElement('div');
+		rebindConfirmOverlay.style.position = 'absolute';
+		rebindConfirmOverlay.style.top = '0';
+		rebindConfirmOverlay.style.left = '0';
+		rebindConfirmOverlay.style.width = '100%';
+		rebindConfirmOverlay.style.height = '100%';
+		rebindConfirmOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+		rebindConfirmOverlay.style.zIndex = '2000';
+		this.rebindConfirm.appendChild(rebindConfirmOverlay);
+
+		let rebindConfirmText = document.createElement('h2');
+		rebindConfirmText.style.position = 'absolute';
+		rebindConfirmText.style.top = '50%';
+		rebindConfirmText.style.left = '50%';
+		rebindConfirmText.style.transform = 'translate(-50%, -50%)';
+		rebindConfirmText.style.color = 'white';
+		rebindConfirmText.style.textAlign = 'center';
+		rebindConfirmText.style.zIndex = '2001';
+		this.rebindConfirm.appendChild(rebindConfirmText);
+
+		this.rebindConfirmYes = document.createElement('img');
+		this.rebindConfirmYes.style.position = 'absolute';
+		this.rebindConfirmYes.style.top = '60%';
+		this.rebindConfirmYes.style.left = '40%';
+		this.rebindConfirmYes.style.transform = 'translate(-50%, -50%)';
+		this.rebindConfirmYes.style.zIndex = '2001';
+		this.rebindConfirm.appendChild(this.rebindConfirmYes);
+
+		this.rebindConfirmNo = document.createElement('img');
+		this.rebindConfirmNo.style.position = 'absolute';
+		this.rebindConfirmNo.style.top = '60%';
+		this.rebindConfirmNo.style.left = '60%';
+		this.rebindConfirmNo.style.transform = 'translate(-50%, -50%)';
+		this.rebindConfirmNo.style.zIndex = '2001';
+		this.rebindConfirm.appendChild(this.rebindConfirmNo);
+
+		document.body.appendChild(this.rebindConfirm);
+
+		(this as any).svelteComponent = new OptionsUI({
+			target: this.div,
+			props: {
+				StorageManager,
+				modification: state.modification,
+				hideOptions: () => {
+					this.hide();
+					menu.home.show();
+				},
+				changeKeybinding: (key: string, isGamepad: boolean) => this.changeKeybinding(key as any, isGamepad),
+				formatKeybinding: (key: string) => this.formatKeybinding(key as any),
+				formatGamepadKeybindingForButton: (key: string) => this.formatGamepadKeybindingForButton(key as any)
 			}
 		});
 
-		window.addEventListener('mousedown', (e) => {
-			if (!this.currentlyRebinding || this.rebindValue || this.currentlyRebindingGamepad) return;
-
-			let buttonName = ["LMB", "MMB", "RMB"][e.button];
-			if (!buttonName) return;
-
-			this.setKeybinding(this.currentlyRebinding, buttonName);
+		(this as any).svelteComponent.$on('audioUpdate', () => {
+			if ((window as any).mainAudioManager) (window as any).mainAudioManager.updateVolumes();
 		});
 
-		menu.setupButton(this.rebindConfirmYes, this.rebindConfirmYesSrc, () => {
-			if (this.currentlyRebindingGamepad) {
-				// Gamepad rebinding
-				// Find and clear other identical bindings
-				let axisName = this.rebindValue.startsWith('axis') ? this.rebindValue.substring(0, 5) : '';
-				if (axisName) {
-					for (let i = 0; i < StorageManager.data.settings.gamepadAxisMapping.length; i++) {
-						if (StorageManager.data.settings.gamepadAxisMapping[i] === axisName && StorageManager.data.settings.gamepadAxisMapping[i] !== this.currentlyRebinding) {
-							StorageManager.data.settings.gamepadAxisMapping[i] = '';
-						}
-					}
-					// Map axis mappings. Not supported yet visually but logical.
-				} else if (this.rebindValue.startsWith('gamepadButton')) {
-					let btnIndex = parseInt(this.rebindValue.replace('gamepadButton', ''));
-					StorageManager.data.settings.gamepadButtonMapping[btnIndex] = this.currentlyRebinding;
-				}
-				StorageManager.store();
-			} else {
-				// Keyboard/Mouse rebinding
-				for (let key in StorageManager.data.settings.gameButtonMapping) {
-					let typedKey = key as keyof typeof StorageManager.data.settings.gameButtonMapping;
-					let otherValue = StorageManager.data.settings.gameButtonMapping[typedKey];
-
-					if (otherValue === this.rebindValue) StorageManager.data.settings.gameButtonMapping[typedKey] = '';
-				}
-
-				StorageManager.data.settings.gameButtonMapping[this.currentlyRebinding] = this.rebindValue;
-				StorageManager.store();
-			}
-
-			this.currentlyRebinding = null;
-			this.currentlyRebindingGamepad = false;
-			this.rebindValue = null;
-			this.rebindConfirm.classList.add('hidden');
-			this.refreshKeybindings();
-		});
-		menu.setupButton(this.rebindConfirmNo, this.rebindConfirmNoSrc, () => {
-			// Cancel the rebinding process.
-			this.currentlyRebinding = null;
-			this.rebindValue = null;
-			this.rebindConfirm.classList.add('hidden');
-		});
+		// Defer setting up button images until initProperties
 	}
 
 	abstract initProperties(): void;
 
 	async init() {}
 
-	mountSveltePrototype() {
-		if (!(this as any).sveltePrototype && this.div) {
-			(this as any).sveltePrototype = new OptionsSettingsSvelte({
-				target: this.div,
-				props: {
-					StorageManager: StorageManager
-				}
-			});
-		}
-	}
-
 	show() {
 		this.div.classList.remove('hidden');
-			this.mountSveltePrototype();
-}
+	}
 
 	hide() {
 		this.div.classList.add('hidden');
 	}
 
-	abstract refreshKeybindings(): void;
+	refreshKeybindings() {
+		if ((this as any).svelteComponent) {
+			(this as any).svelteComponent.$set({ settings: StorageManager.data.settings });
+		}
+	}
 
 	/** Re-renders dynamic keybinding elements using a lightweight event-driven template approach */
 	renderReactiveKeybindings(container: HTMLElement, mappingSource: any, isGamepad: boolean) {
