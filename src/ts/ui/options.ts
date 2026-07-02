@@ -39,6 +39,8 @@ export const buttonToDisplayNameMbp: Record<keyof typeof StorageManager.data.set
 export abstract class OptionsScreen {
 	menu: Menu;
 	div: HTMLDivElement;
+	keyListener?: (e: KeyboardEvent) => void;
+	mouseListener?: (e: MouseEvent) => void;
 	homeButton: HTMLImageElement;
 	homeButtonSrc: string;
 
@@ -77,6 +79,16 @@ export abstract class OptionsScreen {
 				changeKeybinding: (key: string, isGamepad: boolean) => this.changeKeybinding(key as any, isGamepad),
 				formatKeybinding: (key: string) => this.formatKeybinding(key as any),
 				formatGamepadKeybindingForButton: (key: string) => this.formatGamepadKeybindingForButton(key as any),
+				onPickMarbleTexture: async () => {
+					await this.showMarbleTexturePicker();
+					this.updateMarbleTextureState();
+				},
+				hasMarbleTexture: false,
+				onClearMarbleTexture: () => {
+					StorageManager.databaseDelete('keyvalue', 'marbleTexture');
+					this.updateMarbleTextureState();
+				},
+				onRefresh: () => location.reload(),
 
 				rebindState: {
 					isRebinding: false,
@@ -92,9 +104,9 @@ export abstract class OptionsScreen {
 				},
 				confirmRebind: () => {
 					if (this.currentlyRebindingGamepad) {
-						this.setGamepadKeybinding(this.currentlyRebinding, this.rebindValue);
+						this.setGamepadKeybinding(this.currentlyRebinding, this.rebindValue, true);
 					} else {
-						this.setKeybinding(this.currentlyRebinding, this.rebindValue);
+						this.setKeybinding(this.currentlyRebinding, this.rebindValue, true);
 					}
 				},
 				declineRebind: () => {
@@ -110,13 +122,26 @@ export abstract class OptionsScreen {
 		});
 
 		// Global listener for ESC to cancel rebinding
-		window.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape' && this.currentlyRebinding && !(this as any).svelteComponent.rebindState.hasConflict) {
-				this.currentlyRebinding = null;
-				this.rebindValue = null;
-				this.updateRebindState(false, false, '', '');
-			}
-		});
+
+	}
+
+	handleRebindInput(value: string) {
+		if (!this.currentlyRebinding || this.currentlyRebindingGamepad || this.rebindValue || (this as any).svelteComponent?.rebindState?.hasConflict) return;
+
+		if (value === 'Escape') {
+			this.currentlyRebinding = null;
+			this.updateRebindState(false, false, '', '');
+			return;
+		}
+
+		this.setKeybinding(this.currentlyRebinding, value);
+	}
+
+	async updateMarbleTextureState() {
+		if ((this as any).svelteComponent) {
+			let count = await StorageManager.databaseCount('keyvalue', 'marbleTexture');
+			(this as any).svelteComponent.$set({ hasMarbleTexture: count > 0 });
+		}
 	}
 
 	updateRebindState(isRebinding: boolean, hasConflict: boolean, rebindText: string, conflictText: string) {
@@ -139,11 +164,21 @@ export abstract class OptionsScreen {
 	async init() {}
 
 	show() {
+		this.updateMarbleTextureState();
 		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: true });
+
+		this.keyListener = (e: KeyboardEvent) => this.handleRebindInput(e.code);
+		this.mouseListener = (e: MouseEvent) => this.handleRebindInput('mouse' + e.button);
+
+		window.addEventListener('keydown', this.keyListener);
+		window.addEventListener('mousedown', this.mouseListener);
 	}
 
 	hide() {
 		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: false });
+
+		if (this.keyListener) window.removeEventListener('keydown', this.keyListener);
+		if (this.mouseListener) window.removeEventListener('mousedown', this.mouseListener);
 	}
 
 	refreshKeybindings() {
@@ -265,7 +300,7 @@ export abstract class OptionsScreen {
 		requestAnimationFrame(() => this.pollGamepadForRebind());
 	}
 
-	setGamepadKeybinding(button: keyof typeof StorageManager.data.settings.gameButtonMapping, value: string) {
+	setGamepadKeybinding(button: keyof typeof StorageManager.data.settings.gameButtonMapping, value: string, force = false) {
 		let map = (state.modification === 'gold')? buttonToDisplayNameMbg : buttonToDisplayNameMbp;
 
 		// Note: Gamepad binding has a completely different logic since gameButtonMapping isn't populated here.
@@ -278,7 +313,7 @@ export abstract class OptionsScreen {
 		}
 		// (Skipping complex axis mapping checking for simplicity in this port version unless we build an axis mapping index)
 
-		if (conflict && conflict !== button && conflict !== '') {
+		if (!force && conflict && conflict !== button && conflict !== '') {
 			let conflictKey = conflict as keyof typeof StorageManager.data.settings.gameButtonMapping;
 
 
@@ -331,7 +366,7 @@ export abstract class OptionsScreen {
 	}
 
 	/** Updates the binding for a given button. */
-	setKeybinding(button: keyof typeof StorageManager.data.settings.gameButtonMapping, value: string) {
+	setKeybinding(button: keyof typeof StorageManager.data.settings.gameButtonMapping, value: string, force = false) {
 		let map = (state.modification === 'gold')? buttonToDisplayNameMbg : buttonToDisplayNameMbp;
 
 		// Check for collisions with other bindings
@@ -339,7 +374,7 @@ export abstract class OptionsScreen {
 			let typedKey = key as keyof typeof StorageManager.data.settings.gameButtonMapping;
 			let otherValue = StorageManager.data.settings.gameButtonMapping[typedKey];
 
-			if (otherValue === value && typedKey !== button) {
+			if (!force && otherValue === value && typedKey !== button) {
 				// We found another binding that binds to the same key, bring up the conflict dialog.
 
 

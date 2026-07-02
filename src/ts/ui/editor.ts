@@ -9,8 +9,8 @@ import LevelEditorSvelte from "./svelte/LevelEditor.svelte";
 
 export class LevelEditor {
 	menu: Menu;
-	div: HTMLDivElement;
-	homeButton: HTMLImageElement;
+
+
 
 	constructor(menu: Menu) {
 		this.menu = menu;
