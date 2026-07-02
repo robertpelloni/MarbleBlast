@@ -4,6 +4,8 @@ import { BestTimes } from "../storage";
 import { Util } from "../util";
 import { FinishScreen } from "./finish_screen";
 import { Menu } from "./menu";
+// @ts-ignore
+import FinishBestTimesUISvelte from "./svelte/FinishBestTimesUI.svelte";
 
 export const MBP_GOLD_COLOR = 'rgb(255, 204, 0)';
 export const MBP_PLATINUM_COLOR = 'rgb(204, 204, 204)';
@@ -147,19 +149,7 @@ export class MbpFinishScreen extends FinishScreen {
 		return div;
 	}
 
-	updateBestTimeElement(element: HTMLDivElement, score: BestTimes[number], rank: number) {
-		let goldTime = state.level.mission.goldTime;
-		let ultimateTime = state.level.mission.ultimateTime;
-
-		let tmp = document.createElement('div');
-		tmp.textContent = Util.secondsToTimeString(score[1] / 1000);
-		Util.monospaceNumbers(tmp);
-		element.innerHTML = `<div><span>${rank}. </span>${Util.htmlEscape(score[0])}</div><div>${tmp.innerHTML}</div>`;
-
-		element.style.color = '';
-		if (score[1] <= goldTime) element.style.color = (state.level.mission.modification === 'gold')? MBP_GOLD_COLOR : MBP_PLATINUM_COLOR;
-		if (score[1] <= ultimateTime) element.style.color = MBP_ULTIMATE_COLOR;
-	}
+	updateBestTimeElement(element: HTMLDivElement, score: BestTimes[number], rank: number) {}
 
 	generateNameEntryText(place: number) {
 		return `You have the ${['top', 'second top', 'third top', 'fourth top', 'fifth top'][place]} time!`;

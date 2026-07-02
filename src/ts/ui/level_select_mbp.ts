@@ -198,36 +198,7 @@ export class MbpLevelSelect extends LevelSelect {
 		this.easterEggIcon.classList.add('hidden');
 	}
 
-	createScoreElement(getReplayData: () => Promise<ArrayBuffer>) {
-		let element = document.createElement('div');
-		element.classList.add('mbp-level-select-best-time');
 
-		let name = document.createElement('div');
-		element.appendChild(name);
-
-		let time = document.createElement('div');
-		element.appendChild(time);
-
-		element.appendChild(this.createReplayButton(getReplayData));
-
-		return element;
-	}
-
-	getReplayButtonForScoreElement(element: HTMLDivElement): HTMLImageElement {
-		return element.children[2] as HTMLImageElement;
-	}
-
-	updateScoreElement(element: HTMLDivElement, score: BestTimes[number], rank: number) {
-		element.children[0].innerHTML = `<span>${rank}.</span> ${Util.htmlEscape(score[0])}`;
-		element.children[1].textContent = Util.secondsToTimeString(score[1] / 1000);
-		Util.monospaceNumbers(element.children[1]);
-
-		element.style.color = '';
-		if (!this.currentMission) return;
-
-		if (score[1] <= this.currentMission.goldTime) element.style.color = (this.currentMission.modification === 'gold')? MBP_GOLD_COLOR : MBP_PLATINUM_COLOR;
-		if (score[1] <= this.currentMission.ultimateTime) element.style.color = MBP_ULTIMATE_COLOR;
-	}
 
 	show() {
 		super.show();

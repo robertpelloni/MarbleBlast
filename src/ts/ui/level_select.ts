@@ -8,6 +8,8 @@ import { previousButtonState } from "../input";
 import { Leaderboard } from "../leaderboard";
 import { Menu } from "./menu";
 import { MissionLibrary } from "../mission_library";
+// @ts-ignore
+import LevelSelectUISvelte from "./svelte/LevelSelectUI.svelte";
 import { state } from "../state";
 import { VideoRenderer } from "./video_renderer";
 
@@ -91,32 +93,9 @@ export abstract class LevelSelect {
 
 	async init() {
 		// Create the elements for the local best times
-		for (let i = 0; i < this.localScoresCount; i++) {
-			let element = this.createScoreElement(async (replayButtonData?: string) => {
-				return await StorageManager.databaseGet('replays', replayButtonData);
-			});
-			this.localBestTimesContainer.appendChild(element);
-		}
+		// Svelte handles rendering the local scores now
 
-		// Create the elements for the online leaderboard (will be reused)
-		for (let i = 0; i < 18; i++) {
-			let element = this.createScoreElement(async () => {
-				if (this.fetchingRemoteReplay) return; // Let's wait for the first fetch to finish shall we :)
 
-				try {
-					this.fetchingRemoteReplay = true;
-					let replayDataBlob = await ResourceManager.retryFetch(`./api/world_record_replay?missionPath=${encodeURIComponent(this.currentMission.path)}`);
-					let buffer = await replayDataBlob.arrayBuffer();
-					this.fetchingRemoteReplay = false;
-
-					return buffer;
-				} catch (e) {
-					this.fetchingRemoteReplay = false;
-					return null;
-				}
-			});
-			this.leaderboardScores.appendChild(element);
-		}
 
 		this.scrollWindow.addEventListener('scroll', () => this.updateOnlineLeaderboard());
 
@@ -437,22 +416,42 @@ export abstract class LevelSelect {
 	}
 
 	/** Creates a score element that can be used to show local and online scores. */
-	abstract createScoreElement(getReplayData: () => Promise<ArrayBuffer>): HTMLDivElement;
-	/** Updates a previously created score element. */
-	abstract updateScoreElement(element: HTMLDivElement, score: BestTimes[number], rank: number): void;
-	/** Return the... you know what, the name is kinda self-explanatory. */
-	abstract getReplayButtonForScoreElement(element: HTMLDivElement): HTMLImageElement;
 
 	displayBestTimes() {
 		let randomId = Util.getRandomId();
 		this.lastDisplayBestTimesId = randomId;
 
 		let bestTimes = StorageManager.getBestTimesForMission(this.currentMission?.path, this.localScoresCount, this.scorePlaceholderName);
-		for (let i = 0; i < this.localScoresCount; i++) {
-			let element = this.localBestTimesContainer.children[i] as HTMLDivElement;
-			this.updateScoreElement(this.localBestTimesContainer.children[i] as HTMLDivElement, bestTimes[i], i+1);
-			this.updateReplayButton(this.getReplayButtonForScoreElement(element), bestTimes[i], i+1, true, false);
+
+		if (!(this as any).svelteScores) {
+			this.localBestTimesContainer.innerHTML = '';
+			(this as any).svelteScores = new LevelSelectUISvelte({
+				target: this.localBestTimesContainer,
+				props: {
+					scores: bestTimes,
+					modification: state.modification,
+					goldTime: this.currentMission?.goldTime ?? 0,
+					ultimateTime: this.currentMission?.ultimateTime ?? Infinity,
+					handleReplayPlay: async (replayId: string) => {
+						let buffer = await StorageManager.databaseGet('replays', replayId);
+						if (buffer) {
+							let replay = Replay.fromSerialized(buffer);
+							let mission = this.currentMission;
+							this.div.classList.add('hidden');
+							this.menu.loadingScreen.loadLevel(mission, async () => replay);
+						}
+					}
+				}
+			});
+		} else {
+			(this as any).svelteScores.$set({
+				scores: bestTimes,
+				modification: state.modification,
+				goldTime: this.currentMission?.goldTime ?? 0,
+				ultimateTime: this.currentMission?.ultimateTime ?? Infinity
+			});
 		}
+
 
 		if (!this.currentMission) {
 			this.leaderboardLoading.style.display = 'none';
@@ -539,47 +538,43 @@ export abstract class LevelSelect {
 		if (!mission) return;
 
 		let onlineScores = Leaderboard.scores.get(mission.path) ?? [];
-		let elements = this.leaderboardScores.children;
-		let index = 0;
 
-		// Reset styling
-		this.leaderboardScores.style.paddingTop = '0px';
-		this.leaderboardScores.style.paddingBottom = '0px';
-		(elements[index] as HTMLDivElement).style.display = 'block';
+		if (!(this as any).svelteOnlineScores) {
+			this.leaderboardScores.innerHTML = '';
+			(this as any).svelteOnlineScores = new LevelSelectUISvelte({
+				target: this.leaderboardScores,
+				props: {
+					scores: onlineScores,
+					modification: state.modification,
+					goldTime: mission.goldTime,
+					ultimateTime: mission.ultimateTime,
+					handleReplayPlay: async (replayId: string) => {
+						if (this.fetchingRemoteReplay) return;
+						try {
+							this.fetchingRemoteReplay = true;
+							let replayDataBlob = await ResourceManager.retryFetch('./api/world_record_replay?missionPath=' + encodeURIComponent(this.currentMission.path));
+							let buffer = await replayDataBlob.arrayBuffer();
+							this.fetchingRemoteReplay = false;
 
-		// Get the y of the top element
-		let currentY = (elements[0] as HTMLDivElement).offsetTop - this.scrollWindow.scrollTop;
-
-		this.leaderboardScores.style.height = onlineScores.length * this.scoreElementHeight + 'px';
-
-		// As long as the top element is out of view, move to the next one. By doing this, we find the first element that's in view (from the top)
-		while (currentY < -this.scoreElementHeight && index < onlineScores.length) {
-			index++;
-			currentY += this.scoreElementHeight;
+							let replay = Replay.fromSerialized(buffer);
+							let mission = this.currentMission;
+							this.div.classList.add('hidden');
+							this.menu.loadingScreen.loadLevel(mission, async () => replay);
+						} catch (e) {
+							this.fetchingRemoteReplay = false;
+							state.menu.showAlertPopup('Error', "Could not download replay.");
+						}
+					}
+				}
+			});
+		} else {
+			(this as any).svelteOnlineScores.$set({
+				scores: onlineScores,
+				modification: state.modification,
+				goldTime: mission.goldTime,
+				ultimateTime: mission.ultimateTime
+			});
 		}
-
-		// Add padding to the top according to how many elements we've already passed at the top
-		this.leaderboardScores.style.paddingTop = index * this.scoreElementHeight + 'px';
-
-		for (let i = 0; i < elements.length; i++) {
-			let element = elements[i] as HTMLDivElement;
-
-			if (index < onlineScores.length) {
-				// If there's a score, apply it to the current element
-				let score = onlineScores[index];
-				element.style.display = 'block';
-				this.updateScoreElement(element, score as any, index + 1);
-				this.updateReplayButton(this.getReplayButtonForScoreElement(element), score as any, index + 1, false, score[2]);
-			} else {
-				// Hide the element otherwise
-				element.style.display = 'none';
-			}
-
-			index++;
-		}
-
-		// Add padding to the bottom according to how many scores there are still left
-		this.leaderboardScores.style.paddingBottom = Math.max(onlineScores.length - index, 0) * this.scoreElementHeight + 'px';
 	}
 
 	onSearchInputChange() {
