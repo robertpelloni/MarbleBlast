@@ -60,91 +60,13 @@ export abstract class OptionsScreen {
 	constructor(menu: Menu) {
 		this.menu = menu;
 
-		this.div = document.createElement('div');
-		this.div.id = 'options-screen-container';
-		this.div.classList.add('hidden');
-		document.body.appendChild(this.div);
 
-		// The rebind dialogs are complex state machines we keep in DOM for now
-		this.rebindDialog = document.createElement('div');
-		this.rebindDialog.classList.add('hidden');
-		this.rebindDialog.id = 'rebind-dialog';
 
-		let rebindOverlay = document.createElement('div');
-		rebindOverlay.style.position = 'absolute';
-		rebindOverlay.style.top = '0';
-		rebindOverlay.style.left = '0';
-		rebindOverlay.style.width = '100%';
-		rebindOverlay.style.height = '100%';
-		rebindOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-		rebindOverlay.style.zIndex = '2000';
-		this.rebindDialog.appendChild(rebindOverlay);
 
-		let rebindText = document.createElement('h2');
-		rebindText.style.position = 'absolute';
-		rebindText.style.top = '50%';
-		rebindText.style.left = '50%';
-		rebindText.style.transform = 'translate(-50%, -50%)';
-		rebindText.style.color = 'white';
-		rebindText.style.zIndex = '2001';
-		this.rebindDialog.appendChild(rebindText);
 
-		let rebindCancelText = document.createElement('p');
-		rebindCancelText.innerHTML = "Press ESC to cancel.";
-		rebindCancelText.style.position = 'absolute';
-		rebindCancelText.style.top = '60%';
-		rebindCancelText.style.left = '50%';
-		rebindCancelText.style.transform = 'translate(-50%, -50%)';
-		rebindCancelText.style.color = 'white';
-		rebindCancelText.style.zIndex = '2001';
-		this.rebindDialog.appendChild(rebindCancelText);
-
-		document.body.appendChild(this.rebindDialog);
-
-		this.rebindConfirm = document.createElement('div');
-		this.rebindConfirm.classList.add('hidden');
-		this.rebindConfirm.id = 'rebind-confirm-dialog';
-
-		let rebindConfirmOverlay = document.createElement('div');
-		rebindConfirmOverlay.style.position = 'absolute';
-		rebindConfirmOverlay.style.top = '0';
-		rebindConfirmOverlay.style.left = '0';
-		rebindConfirmOverlay.style.width = '100%';
-		rebindConfirmOverlay.style.height = '100%';
-		rebindConfirmOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-		rebindConfirmOverlay.style.zIndex = '2000';
-		this.rebindConfirm.appendChild(rebindConfirmOverlay);
-
-		let rebindConfirmText = document.createElement('h2');
-		rebindConfirmText.style.position = 'absolute';
-		rebindConfirmText.style.top = '50%';
-		rebindConfirmText.style.left = '50%';
-		rebindConfirmText.style.transform = 'translate(-50%, -50%)';
-		rebindConfirmText.style.color = 'white';
-		rebindConfirmText.style.textAlign = 'center';
-		rebindConfirmText.style.zIndex = '2001';
-		this.rebindConfirm.appendChild(rebindConfirmText);
-
-		this.rebindConfirmYes = document.createElement('img');
-		this.rebindConfirmYes.style.position = 'absolute';
-		this.rebindConfirmYes.style.top = '60%';
-		this.rebindConfirmYes.style.left = '40%';
-		this.rebindConfirmYes.style.transform = 'translate(-50%, -50%)';
-		this.rebindConfirmYes.style.zIndex = '2001';
-		this.rebindConfirm.appendChild(this.rebindConfirmYes);
-
-		this.rebindConfirmNo = document.createElement('img');
-		this.rebindConfirmNo.style.position = 'absolute';
-		this.rebindConfirmNo.style.top = '60%';
-		this.rebindConfirmNo.style.left = '60%';
-		this.rebindConfirmNo.style.transform = 'translate(-50%, -50%)';
-		this.rebindConfirmNo.style.zIndex = '2001';
-		this.rebindConfirm.appendChild(this.rebindConfirmNo);
-
-		document.body.appendChild(this.rebindConfirm);
 
 		(this as any).svelteComponent = new OptionsUI({
-			target: this.div,
+			target: document.body,
 			props: {
 				StorageManager,
 				modification: state.modification,
@@ -154,7 +76,32 @@ export abstract class OptionsScreen {
 				},
 				changeKeybinding: (key: string, isGamepad: boolean) => this.changeKeybinding(key as any, isGamepad),
 				formatKeybinding: (key: string) => this.formatKeybinding(key as any),
-				formatGamepadKeybindingForButton: (key: string) => this.formatGamepadKeybindingForButton(key as any)
+				formatGamepadKeybindingForButton: (key: string) => this.formatGamepadKeybindingForButton(key as any),
+
+				rebindState: {
+					isRebinding: false,
+					hasConflict: false,
+					rebindText: '',
+					conflictText: '',
+					warningEnding: 'Rebind anyway?'
+				},
+				cancelRebind: () => {
+					this.currentlyRebinding = null;
+					this.rebindValue = null;
+					this.updateRebindState(false, false, '', '');
+				},
+				confirmRebind: () => {
+					if (this.currentlyRebindingGamepad) {
+						this.setGamepadKeybinding(this.currentlyRebinding, this.rebindValue);
+					} else {
+						this.setKeybinding(this.currentlyRebinding, this.rebindValue);
+					}
+				},
+				declineRebind: () => {
+					this.currentlyRebinding = null;
+					this.rebindValue = null;
+					this.updateRebindState(false, false, '', '');
+				}
 			}
 		});
 
@@ -162,19 +109,41 @@ export abstract class OptionsScreen {
 			if ((window as any).mainAudioManager) (window as any).mainAudioManager.updateVolumes();
 		});
 
-		// Defer setting up button images until initProperties
+		// Global listener for ESC to cancel rebinding
+		window.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && this.currentlyRebinding && !(this as any).svelteComponent.rebindState.hasConflict) {
+				this.currentlyRebinding = null;
+				this.rebindValue = null;
+				this.updateRebindState(false, false, '', '');
+			}
+		});
 	}
+
+	updateRebindState(isRebinding: boolean, hasConflict: boolean, rebindText: string, conflictText: string) {
+		if ((this as any).svelteComponent) {
+			(this as any).svelteComponent.$set({
+				rebindState: {
+					isRebinding,
+					hasConflict,
+					rebindText,
+					conflictText,
+					warningEnding: 'Rebind anyway?'
+				}
+			});
+		}
+	}
+
 
 	abstract initProperties(): void;
 
 	async init() {}
 
 	show() {
-		this.div.classList.remove('hidden');
+		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: true });
 	}
 
 	hide() {
-		this.div.classList.add('hidden');
+		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: false });
 	}
 
 	refreshKeybindings() {
@@ -255,8 +224,8 @@ export abstract class OptionsScreen {
 		if (Util.isTouchDevice) return; // Don't
 
 		let map = (state.modification === 'gold')? buttonToDisplayNameMbg : buttonToDisplayNameMbp;
-		this.rebindDialog.classList.remove('hidden');
-		this.rebindDialog.children[1].innerHTML = `Press a new ${isGamepad ? 'gamepad button/axis' : 'key or mouse button'} for<br>"${map[button]}"`;
+
+		this.updateRebindState(true, false, `Press a new ${isGamepad ? 'gamepad button/axis' : 'key or mouse button'} for<br>"${map[button]}"`.replace(/<br>/g, ' '), '');
 		this.currentlyRebinding = button;
 		this.currentlyRebindingGamepad = isGamepad;
 
@@ -311,9 +280,9 @@ export abstract class OptionsScreen {
 
 		if (conflict && conflict !== button && conflict !== '') {
 			let conflictKey = conflict as keyof typeof StorageManager.data.settings.gameButtonMapping;
-			this.rebindDialog.classList.add('hidden');
-			this.rebindConfirm.classList.remove('hidden');
-			this.rebindConfirm.children[1].innerHTML = `"${this.formatGamepadKeybinding(value)}" is already bound to "${map[conflictKey]}"!<br>` + this.rebindConfirmWarningEnding;
+
+
+			this.updateRebindState(true, true, '', `"${this.formatGamepadKeybinding(value)}" is already bound to "${map[conflictKey]}"!<br>` + this.rebindConfirmWarningEnding);
 			this.rebindValue = value;
 			return;
 		}
@@ -357,7 +326,7 @@ export abstract class OptionsScreen {
 		StorageManager.store();
 		this.currentlyRebinding = null;
 		this.currentlyRebindingGamepad = false;
-		this.rebindDialog.classList.add('hidden');
+
 		this.refreshKeybindings();
 	}
 
@@ -372,9 +341,9 @@ export abstract class OptionsScreen {
 
 			if (otherValue === value && typedKey !== button) {
 				// We found another binding that binds to the same key, bring up the conflict dialog.
-				this.rebindDialog.classList.add('hidden');
-				this.rebindConfirm.classList.remove('hidden');
-				this.rebindConfirm.children[1].innerHTML = `"${this.formatKeybinding(typedKey)}" is already bound to "${map[typedKey]}"!<br>` + this.rebindConfirmWarningEnding;
+
+
+				this.updateRebindState(true, true, '', `"${this.formatKeybinding(typedKey)}" is already bound to "${map[typedKey]}"!<br>` + this.rebindConfirmWarningEnding);
 				this.rebindValue = value;
 
 				return;
@@ -385,7 +354,7 @@ export abstract class OptionsScreen {
 		StorageManager.data.settings.gameButtonMapping[button] = value;
 		StorageManager.store();
 		this.currentlyRebinding = null;
-		this.rebindDialog.classList.add('hidden');
+
 		this.refreshKeybindings();
 	}
 
