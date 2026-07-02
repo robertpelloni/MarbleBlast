@@ -529,58 +529,89 @@ window.addEventListener('drop', async (e) => {
 	e.preventDefault();
 	if (!e.dataTransfer?.files.length) return;
 
-	let file = e.dataTransfer.files[0];
+	let files = Array.from(e.dataTransfer.files);
+	let importedAssets: string[] = [];
+	let misFileToLoad: File = null;
 
-	if (file.name.endsWith('.dts') || file.name.endsWith('.dif')) {
-		// Native Asset Drag & Drop Integration
-		let logicalPath = prompt("Enter the logical path for this asset (e.g. data/shapes/custom/my_shape.dts):", "data/custom/" + file.name);
-		if (!logicalPath) return;
-		await StorageManager.databasePut('keyvalue', file, 'custom_asset_' + logicalPath);
-		if (state && state.menu) state.menu.showAlertPopup("Custom Asset Loaded", "Successfully imported " + file.name + " as " + logicalPath);
-		return;
-	}
+	const supportedAssetExtensions = ['.dts', '.dif', '.png', '.jpg', '.jpeg', '.wav', '.ogg', '.dml', '.gui'];
 
-	if (!file.name.endsWith('.mis')) {
-		console.warn("Only .mis, .dif, and .dts files are currently supported for drag and drop.");
-		return;
-	}
+	for (let file of files) {
+		let name = file.name.toLowerCase();
 
-	try {
-		let arrayBuffer = await file.arrayBuffer();
-		let misString = new TextDecoder().decode(arrayBuffer);
+		if (name.endsWith('.mis')) {
+			misFileToLoad = file; // We only load one mission at a time to prevent race conditions
+			continue;
+		}
 
-		console.log("Successfully dropped mission file:", file.name);
+		let isSupported = supportedAssetExtensions.some(ext => name.endsWith(ext));
+		if (isSupported) {
+			// Auto-infer path based on extension
+			let defaultDir = "data/custom/";
+			if (name.endsWith('.wav') || name.endsWith('.ogg')) defaultDir = "data/sound/custom/";
+			else if (name.endsWith('.dts') || name.endsWith('.dif')) defaultDir = "data/shapes/custom/";
+			else if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) defaultDir = "data/shapes/custom/";
 
-		// 1. Parse the dropped mis file
-		// (Avoid dynamic import to bypass TS1323)
-		let misFile = new MisParser(misString).parse();
-
-		// 2. Wrap it into a Mission object. We prefix the path to indicate it is a local drop.
-		let virtualPath = 'custom/dropped/' + file.name;
-		let newMission = Mission.fromMisFile(virtualPath, misFile);
-		newMission.id = Math.floor(Math.random() * 10000000); // Give it a fake ID
-
-		// 3. Inject it into MissionLibrary
-		MissionLibrary.allMissions.push(newMission);
-
-		// Add it to the correct custom array based on modification
-		if (state && state.modification) {
-			if (state.modification === 'gold') {
-				MissionLibrary.goldCustom.push(newMission);
-			} else if (state.modification === 'platinum') {
-				MissionLibrary.platinumCustom.push(newMission);
-			} else if (state.modification === 'ultra') {
-				MissionLibrary.ultraCustom.push(newMission);
+			let logicalPath = prompt(`Enter the logical path for ${file.name}:`, defaultDir + file.name);
+			if (logicalPath) {
+				await StorageManager.databasePut('keyvalue', file, 'custom_asset_' + logicalPath);
+				importedAssets.push(logicalPath);
 			}
 		} else {
-			MissionLibrary.goldCustom.push(newMission);
+			console.warn(`Unsupported file format dropped: ${file.name}`);
 		}
+	}
 
-		if (state && state.menu) {
-			state.menu.showAlertPopup("Custom Level Loaded", "Loaded " + file.name + " into the custom levels tab.");
+	if (importedAssets.length > 0 && state && state.menu) {
+		state.menu.showAlertPopup("Custom Assets Loaded", `Successfully imported ${importedAssets.length} asset(s):<br>` + importedAssets.join('<br>'));
+	}
+
+	if (misFileToLoad) {
+		try {
+			let arrayBuffer = await misFileToLoad.arrayBuffer();
+			let misString = new TextDecoder().decode(arrayBuffer);
+
+			console.log("Successfully dropped mission file:", misFileToLoad.name);
+
+			// 1. Parse the dropped mis file
+			let misFile = new MisParser(misString).parse();
+
+			// 2. Wrap it into a Mission object. We prefix the path to indicate it is a local drop.
+			let virtualPath = 'custom/dropped/' + misFileToLoad.name;
+			let newMission = Mission.fromMisFile(virtualPath, misFile);
+			newMission.id = Math.floor(Math.random() * 10000000); // Give it a fake ID
+
+			// 3. Inject it into MissionLibrary
+			MissionLibrary.allMissions.push(newMission);
+
+			// Add it to the correct custom array based on modification
+			if (state && state.modification) {
+				if (state.modification === 'gold') {
+					MissionLibrary.goldCustom.push(newMission);
+				} else if (state.modification === 'platinum') {
+					MissionLibrary.platinumCustom.push(newMission);
+				} else if (state.modification === 'ultra') {
+					MissionLibrary.ultraCustom.push(newMission);
+				}
+			} else {
+				MissionLibrary.goldCustom.push(newMission);
+			}
+
+			// 4. Force UI refresh if currently on LevelSelect
+			if (state && state.menu && state.menu.levelSelect && !state.menu.levelSelect.div.classList.contains('hidden')) {
+				if (state.modification === 'gold') state.menu.levelSelect.setMissionArray(MissionLibrary.goldCustom);
+				else if (state.modification === 'platinum') state.menu.levelSelect.setMissionArray(MissionLibrary.platinumCustom);
+				else if (state.modification === 'ultra') state.menu.levelSelect.setMissionArray(MissionLibrary.ultraCustom);
+
+				state.menu.showAlertPopup("Custom Level Loaded", `Added ${newMission.title} to the Custom levels tab!`);
+			} else if (state && state.menu) {
+				state.menu.showAlertPopup("Custom Level Loaded", `${newMission.title} is now available in the Custom levels tab.`);
+			}
+		} catch (err) {
+			console.error("Error parsing dropped mission file", err);
+			if (state && state.menu) {
+				state.menu.showAlertPopup("Error", "Could not parse mission file: " + misFileToLoad.name);
+			}
 		}
-	} catch (err) {
-		console.error("Error reading dropped file:", err);
 	}
 });
 
