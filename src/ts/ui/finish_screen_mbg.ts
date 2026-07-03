@@ -4,8 +4,6 @@ import { BestTimes } from "../storage";
 import { Util } from "../util";
 import { FinishScreen } from "./finish_screen";
 import { Menu } from "./menu";
-// @ts-ignore
-import FinishBestTimesUISvelte from "./svelte/FinishBestTimesUI.svelte";
 
 export class MbgFinishScreen extends FinishScreen {
 	viewReplayButton = document.querySelector('#finish-view-replay') as HTMLImageElement;
@@ -85,7 +83,23 @@ export class MbgFinishScreen extends FinishScreen {
 		Util.monospaceNumbers(this.bonusTimeElement);
 	}
 
+	createBestTimeElement() {
+		let div = document.createElement('div');
+		div.innerHTML = '<p></p><p></p>';
+		div.classList.add('finish-row');
 
+		return div;
+	}
+
+	updateBestTimeElement(element: HTMLDivElement, score: BestTimes[number], rank: number) {
+		let goldTime = state.level.mission.goldTime;
+
+		element.children[0].textContent = rank + '. ' + score[0];
+		element.children[1].textContent = Util.secondsToTimeString(score[1] / 1000);
+		Util.monospaceNumbers(element.children[1]);
+		(element.children[1] as HTMLParagraphElement).style.color = (score[1] <= goldTime)? '#fff700' : '';
+		(element.children[1] as HTMLParagraphElement).style.textShadow = (score[1] <= goldTime)? '1px 1px 0px black' : '';
+	}
 
 	generateNameEntryText(place: number) {
 		return `You got the ${['best', '2nd best', '3rd best'][place]} time!`;
