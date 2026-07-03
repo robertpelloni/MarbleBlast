@@ -20,10 +20,8 @@ export abstract class PauseScreen {
 
 	/** If true, can't be closed using the Escape key. */
 	preventClose = false;
-	menu: Menu;
 
 	constructor(menu: Menu) {
-		this.menu = menu;
 		this.initProperties();
 
 		menu.setupButton(this.yesButton, this.yesSrc, () => {

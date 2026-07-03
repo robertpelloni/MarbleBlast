@@ -10,8 +10,15 @@ import LevelEditorSvelte from "./svelte/LevelEditor.svelte";
 export class LevelEditor {
 	menu: Menu;
 
+
+
 	constructor(menu: Menu) {
 		this.menu = menu;
+
+
+
+
+
 
 		(this as any).svelteComponent = new LevelEditorSvelte({
 			target: document.body,
@@ -125,5 +132,7 @@ export class LevelEditor {
 		if ((this as any).svelteComponent) (this as any).svelteComponent.$set({ visible: false });
 		window.dispatchEvent(new CustomEvent('disableEditorTouchMode'));
 	}
+
+
 
 }
